@@ -1,0 +1,14 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Arabic text uses Cairo font */
+[dir="rtl"] body,
+[dir="rtl"] * {
+  font-family: 'Cairo', sans-serif;
+}
+
+/* Smooth direction transition */
+html {
+  transition: direction 0.1s;
+}

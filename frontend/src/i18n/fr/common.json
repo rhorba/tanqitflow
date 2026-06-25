@@ -1,0 +1,74 @@
+{
+  "app": {
+    "name": "TanqitFlow",
+    "tagline": "Plateforme d'intelligence eau non facturée"
+  },
+  "nav": {
+    "dashboard": "Tableau de bord",
+    "dmas": "Zones de mesure",
+    "map": "Carte des pertes",
+    "worklist": "Plan de réparation",
+    "ingestion": "Import données",
+    "reports": "Rapports",
+    "admin": "Administration"
+  },
+  "auth": {
+    "login": "Connexion",
+    "logout": "Déconnexion",
+    "email": "Adresse e-mail",
+    "password": "Mot de passe",
+    "forgot_password": "Mot de passe oublié ?",
+    "sign_in": "Se connecter",
+    "invalid_credentials": "Email ou mot de passe incorrect"
+  },
+  "dashboard": {
+    "title": "Tableau de bord NRW",
+    "siv": "Volume entrant (SIV)",
+    "nrw_m3": "Eau non facturée (m³)",
+    "nrw_pct": "Taux ENF (%)",
+    "flagged_dmas": "Zones suspectes",
+    "trend": "Tendance (12 mois)"
+  },
+  "worklist": {
+    "title": "Plan de réparation prioritaire",
+    "rank": "Rang",
+    "dma": "Zone DMA",
+    "savings": "Économies estimées (MAD/mois)",
+    "confidence": "Confiance (%)",
+    "alert_type": "Type d'alerte",
+    "status": "Statut",
+    "status_open": "Ouvert",
+    "status_in_progress": "En cours",
+    "status_resolved": "Résolu",
+    "status_deferred": "Reporté"
+  },
+  "ingestion": {
+    "title": "Import de données",
+    "upload": "Importer un fichier CSV",
+    "drop_here": "Déposez votre fichier ici ou cliquez pour parcourir",
+    "file_types": "Fichiers acceptés : CSV, XLSX (max 50 Mo)",
+    "type_dma_inflow": "Compteurs entrée DMA",
+    "type_customer_reads": "Relevés clients",
+    "type_pressure_flow": "Pression / débit SCADA",
+    "status_queued": "En attente",
+    "status_processing": "En cours",
+    "status_done": "Terminé",
+    "status_error": "Erreur"
+  },
+  "common": {
+    "loading": "Chargement...",
+    "error": "Une erreur est survenue",
+    "retry": "Réessayer",
+    "save": "Enregistrer",
+    "cancel": "Annuler",
+    "confirm": "Confirmer",
+    "export_csv": "Exporter CSV",
+    "export_pdf": "Exporter PDF",
+    "from": "Du",
+    "to": "Au",
+    "last_1m": "1 mois",
+    "last_3m": "3 mois",
+    "last_6m": "6 mois",
+    "last_12m": "12 mois"
+  }
+}

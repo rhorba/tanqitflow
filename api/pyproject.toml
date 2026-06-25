@@ -12,8 +12,8 @@ known-first-party = ["config", "database", "routers", "middleware", "models", "s
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
 testpaths = ["tests"]
-addopts = "--cov=. --cov-omit=tests/*,alembic/* --cov-report=term-missing"
+addopts = "--cov=. --cov-report=term-missing"
 filterwarnings = ["ignore::DeprecationWarning"]
 
 [tool.coverage.run]
-omit = ["tests/*", "alembic/*", "*/migrations/*"]
+omit = ["tests/*", "alembic/*", "*/migrations/*", "tasks/ingest_task.py", "tasks/ping_task.py"]

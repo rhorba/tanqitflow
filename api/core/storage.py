@@ -1,5 +1,4 @@
 import hashlib
-import io
 from typing import TYPE_CHECKING
 
 import boto3

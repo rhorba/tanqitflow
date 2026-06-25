@@ -1,6 +1,6 @@
 """JWT creation/verification and RBAC dependency."""
 import uuid
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 from typing import Annotated
 
 import bcrypt as _bcrypt
@@ -43,8 +43,8 @@ def _build_token(subject: str, extra: dict, expires_delta: timedelta) -> str:
     payload = {
         **extra,
         "sub": subject,
-        "iat": datetime.now(timezone.utc),
-        "exp": datetime.now(timezone.utc) + expires_delta,
+        "iat": datetime.now(UTC),
+        "exp": datetime.now(UTC) + expires_delta,
         "jti": str(uuid.uuid4()),
     }
     return jwt.encode(payload, settings.jwt_secret, algorithm=settings.jwt_algorithm)

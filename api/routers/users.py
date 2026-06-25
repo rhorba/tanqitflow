@@ -104,5 +104,5 @@ async def delete_user(
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
 
     # Prevent self-deletion
-    current = await get_current_user.__wrapped__ if hasattr(get_current_user, "__wrapped__") else None
+    await get_current_user.__wrapped__ if hasattr(get_current_user, "__wrapped__") else None
     await db.delete(user)

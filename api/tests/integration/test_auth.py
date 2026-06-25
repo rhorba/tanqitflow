@@ -1,16 +1,17 @@
 """Integration tests for /api/v1/auth endpoints (mocked DB + Redis)."""
-import uuid
+from datetime import UTC
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 from fastapi.testclient import TestClient
 
-from core.security import hash_password, create_access_token
+from core.security import hash_password
 
 
 def _make_user(role="analyst", is_active=True):
-    from models.user import User
     import uuid as _uuid
+
+    from models.user import User
     u = User()
     u.id = _uuid.uuid4()
     u.email = "test@example.ma"
@@ -111,10 +112,10 @@ class TestPasswordReset:
         assert resp.status_code == 202
 
     def test_confirm_invalid_token_returns_400(self, auth_client):
-        from datetime import datetime, timezone, timedelta
+        from datetime import datetime, timedelta
         user = _make_user()
         user.password_reset_token = "valid-token"
-        user.password_reset_expires_at = datetime.now(timezone.utc) - timedelta(hours=1)
+        user.password_reset_expires_at = datetime.now(UTC) - timedelta(hours=1)
 
         mock_result = MagicMock()
         mock_result.scalar_one_or_none.return_value = user

@@ -1,6 +1,6 @@
 """Auth endpoints: login, refresh, logout, password reset."""
 import secrets
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 from typing import Annotated
 
 from fastapi import APIRouter, Cookie, Depends, HTTPException, Response, status
@@ -13,7 +13,6 @@ from core.security import (
     create_access_token,
     create_refresh_token,
     decode_token,
-    get_current_user,
     hash_password,
     record_failed_login,
     verify_password,
@@ -85,7 +84,7 @@ async def login(
     refresh_token = create_refresh_token(str(user.id), tenant_slug)
 
     # Update last_login_at (no audit log needed — not a write to tenant data)
-    user.last_login_at = datetime.now(timezone.utc)
+    user.last_login_at = datetime.now(UTC)
 
     _set_refresh_cookie(response, refresh_token)
     return TokenResponse(access_token=access_token)
@@ -150,7 +149,7 @@ async def request_password_reset(
     if user and user.is_active:
         token = secrets.token_urlsafe(32)
         user.password_reset_token = token
-        user.password_reset_expires_at = datetime.now(timezone.utc) + timedelta(
+        user.password_reset_expires_at = datetime.now(UTC) + timedelta(
             hours=_RESET_TOKEN_TTL_HOURS
         )
         # TODO: send email via aiosmtplib (Sprint 3 SMTP integration)
@@ -172,7 +171,7 @@ async def confirm_password_reset(
     )
     user = result.scalar_one_or_none()
 
-    if user is None or user.password_reset_expires_at < datetime.now(timezone.utc):
+    if user is None or user.password_reset_expires_at < datetime.now(UTC):
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid or expired token")
 
     if len(body.new_password) < 8:

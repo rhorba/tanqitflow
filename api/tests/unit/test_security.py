@@ -1,9 +1,9 @@
 """Unit tests for JWT creation/verification and RBAC."""
-import pytest
-from jose import jwt
-from unittest.mock import AsyncMock, MagicMock, patch
-
 import os
+from unittest.mock import patch
+
+import pytest
+
 os.environ.setdefault("DATABASE_URL", "postgresql+asyncpg://test:test@localhost/test")
 os.environ.setdefault("DATABASE_SYNC_URL", "postgresql+psycopg2://test:test@localhost/test")
 os.environ.setdefault("MINIO_ACCESS_KEY", "test")
@@ -12,6 +12,7 @@ os.environ.setdefault("JWT_SECRET", "test-secret-key-for-tests-only-1234")
 os.environ.setdefault("PII_ENCRYPTION_KEY", "dGVzdGtleXRlc3RrZXl0ZXN0a2V5dGVzdGtleXQ=")
 
 
+from config import get_settings
 from core.security import (
     create_access_token,
     create_refresh_token,
@@ -19,7 +20,6 @@ from core.security import (
     hash_password,
     verify_password,
 )
-from config import get_settings
 
 settings = get_settings()
 
@@ -46,8 +46,6 @@ class TestAccessToken:
         assert payload["type"] == "access"
 
     def test_expired_token_raises(self):
-        from datetime import timedelta
-        from unittest.mock import patch
         import time
 
         # Patch settings to expire immediately
@@ -58,7 +56,7 @@ class TestAccessToken:
             mock_settings.jwt_refresh_token_expire_days = 0
             token = create_access_token("u", "t", "analyst")
 
-        import time; time.sleep(1)
+        time.sleep(1)
         from fastapi import HTTPException
         with pytest.raises(HTTPException) as exc_info:
             decode_token(token)

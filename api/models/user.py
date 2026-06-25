@@ -1,6 +1,6 @@
 import uuid
 from datetime import datetime
-from enum import Enum
+from enum import StrEnum
 
 from sqlalchemy import Boolean, DateTime, ForeignKey, String, func
 from sqlalchemy.dialects.postgresql import UUID
@@ -9,7 +9,7 @@ from sqlalchemy.orm import Mapped, mapped_column
 from models.base import Base
 
 
-class UserRole(str, Enum):
+class UserRole(StrEnum):
     utility_admin = "utility_admin"
     analyst = "analyst"
     field_viewer = "field_viewer"

@@ -6,6 +6,7 @@ import Header from './components/layout/Header'
 import ProtectedRoute from './components/auth/ProtectedRoute'
 import LoginPage from './pages/LoginPage'
 import ForgotPasswordPage from './pages/ForgotPasswordPage'
+import IngestionPage from './pages/IngestionPage'
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -45,10 +46,11 @@ function AppShell() {
                     path="/dashboard"
                     element={
                       <div className="text-center py-20 text-gray-500">
-                        TanqitFlow — Sprint 2 running ✓
+                        TanqitFlow — Sprint 3 running ✓
                       </div>
                     }
                   />
+                  <Route path="/ingestion" element={<IngestionPage />} />
                   <Route path="*" element={<Navigate to="/dashboard" replace />} />
                 </Routes>
               </main>

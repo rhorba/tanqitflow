@@ -10,7 +10,7 @@ celery_app = Celery(
     backend=settings.redis_url,
     include=[
         "tasks.ping_task",
-        # Sprint 3+: ingest_task, balance_task, detection_task, worklist_task, report_task
+        "tasks.ingest_task",
     ],
 )
 

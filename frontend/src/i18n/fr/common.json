@@ -63,13 +63,21 @@
     "upload": "Importer un fichier CSV",
     "drop_here": "Déposez votre fichier ici ou cliquez pour parcourir",
     "file_types": "Fichiers acceptés : CSV, XLSX (max 50 Mo)",
+    "file_too_large": "Le fichier dépasse la limite de 50 Mo.",
     "type_dma_inflow": "Compteurs entrée DMA",
     "type_customer_reads": "Relevés clients",
     "type_pressure_flow": "Pression / débit SCADA",
     "status_queued": "En attente",
     "status_processing": "En cours",
     "status_done": "Terminé",
-    "status_error": "Erreur"
+    "status_error": "Erreur",
+    "history": "Historique des imports",
+    "no_jobs": "Aucun import pour le moment.",
+    "filename": "Fichier",
+    "type": "Type",
+    "status": "Statut",
+    "rows": "Lignes",
+    "date": "Date"
   },
   "common": {
     "loading": "Chargement...",

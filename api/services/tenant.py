@@ -35,6 +35,51 @@ CREATE OR REPLACE RULE audit_log_no_update AS
     ON UPDATE TO {schema}.audit_log DO INSTEAD NOTHING;
 CREATE OR REPLACE RULE audit_log_no_delete AS
     ON DELETE TO {schema}.audit_log DO INSTEAD NOTHING;
+
+CREATE TABLE IF NOT EXISTS {schema}.dma (
+    id                  UUID        NOT NULL DEFAULT gen_random_uuid() PRIMARY KEY,
+    code                TEXT        NOT NULL UNIQUE,
+    name                TEXT        NOT NULL,
+    description         TEXT,
+    zone                TEXT,
+    pipe_length_km      NUMERIC(10,3),
+    connection_count    INTEGER,
+    geometry_wkt        TEXT,
+    is_active           BOOLEAN     NOT NULL DEFAULT true,
+    created_at          TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at          TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS ix_{schema}_dma_code ON {schema}.dma (code);
+CREATE INDEX IF NOT EXISTS ix_{schema}_dma_zone ON {schema}.dma (zone);
+
+CREATE TABLE IF NOT EXISTS {schema}.dma_inflow (
+    id              UUID        NOT NULL DEFAULT gen_random_uuid() PRIMARY KEY,
+    dma_code        TEXT        NOT NULL,
+    reading_date    TIMESTAMPTZ NOT NULL,
+    volume_m3       NUMERIC(14,4) NOT NULL,
+    pressure_bar    NUMERIC(8,4),
+    flow_rate_lps   NUMERIC(10,4),
+    notes           TEXT,
+    imported_at     TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS ix_{schema}_dma_inflow_dma_code ON {schema}.dma_inflow (dma_code);
+CREATE INDEX IF NOT EXISTS ix_{schema}_dma_inflow_date ON {schema}.dma_inflow (reading_date DESC);
+
+CREATE TABLE IF NOT EXISTS {schema}.customer_reads (
+    id              UUID        NOT NULL DEFAULT gen_random_uuid() PRIMARY KEY,
+    meter_id        TEXT        NOT NULL,
+    reading_date    TIMESTAMPTZ NOT NULL,
+    volume_m3       NUMERIC(14,4) NOT NULL,
+    dma_code        TEXT,
+    customer_type   TEXT,
+    notes           TEXT,
+    imported_at     TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS ix_{schema}_customer_reads_meter ON {schema}.customer_reads (meter_id);
+CREATE INDEX IF NOT EXISTS ix_{schema}_customer_reads_date ON {schema}.customer_reads (reading_date DESC);
 """
 
 

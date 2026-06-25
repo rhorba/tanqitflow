@@ -63,13 +63,21 @@
     "upload": "رفع ملف CSV",
     "drop_here": "أسقط الملف هنا أو انقر للاستعراض",
     "file_types": "الملفات المقبولة: CSV، XLSX (الحد الأقصى 50 ميغابايت)",
+    "file_too_large": "يتجاوز الملف الحد الأقصى البالغ 50 ميغابايت.",
     "type_dma_inflow": "عدادات إدخال DMA",
     "type_customer_reads": "قراءات عدادات الزبائن",
     "type_pressure_flow": "ضغط/تدفق SCADA",
     "status_queued": "في الانتظار",
     "status_processing": "جارٍ المعالجة",
     "status_done": "مكتمل",
-    "status_error": "خطأ"
+    "status_error": "خطأ",
+    "history": "سجل الاستيراد",
+    "no_jobs": "لا توجد عمليات استيراد بعد.",
+    "filename": "الملف",
+    "type": "النوع",
+    "status": "الحالة",
+    "rows": "الصفوف",
+    "date": "التاريخ"
   },
   "common": {
     "loading": "جارٍ التحميل...",

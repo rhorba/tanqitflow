@@ -1,0 +1,38 @@
+"""DMA (District Metered Area) model — lives in tenant schema."""
+import uuid
+from datetime import datetime
+
+from sqlalchemy import Boolean, DateTime, Numeric, String, Text, func
+from sqlalchemy.dialects.postgresql import UUID
+from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
+
+
+class TenantBase(DeclarativeBase):
+    """Separate base for tenant-schema models (no schema= prefix — uses search_path)."""
+    pass
+
+
+class DMA(TenantBase):
+    """
+    One row per District Metered Area within a tenant.
+    Geometry stored as WKT text for portability; PostGIS geometry added later.
+    """
+    __tablename__ = "dma"
+
+    id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), primary_key=True, default=uuid.uuid4
+    )
+    code: Mapped[str] = mapped_column(String(100), unique=True, nullable=False, index=True)
+    name: Mapped[str] = mapped_column(String(300), nullable=False)
+    description: Mapped[str | None] = mapped_column(Text, nullable=True)
+    zone: Mapped[str | None] = mapped_column(String(100), nullable=True, index=True)
+    pipe_length_km: Mapped[float | None] = mapped_column(Numeric(10, 3), nullable=True)
+    connection_count: Mapped[int | None] = mapped_column(nullable=True)
+    geometry_wkt: Mapped[str | None] = mapped_column(Text, nullable=True)
+    is_active: Mapped[bool] = mapped_column(Boolean, server_default="true", nullable=False)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now(), nullable=False
+    )
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False
+    )

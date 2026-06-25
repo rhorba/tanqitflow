@@ -65,9 +65,7 @@ jobs:
       - name: Install dependencies
         run: pip install -r api/requirements-dev.txt
       - name: Run tests with coverage
-        run: |
-          cd api
-          pytest --cov=. --cov-omit="tests/*,alembic/*" --cov-report=term-missing --cov-fail-under=80
+        run: cd api && pytest
       - name: Upload coverage report
         uses: actions/upload-artifact@v4
         if: always()

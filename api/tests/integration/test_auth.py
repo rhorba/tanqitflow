@@ -33,8 +33,16 @@ def auth_client(monkeypatch):
     os.environ.setdefault("JWT_SECRET", "test-secret-key-for-tests-only-1234")
     os.environ.setdefault("PII_ENCRYPTION_KEY", "dGVzdGtleXRlc3RrZXl0ZXN0a2V5dGVzdGtleXQ=")
 
+    # Default mock session — keeps get_db's finally block from hitting a real DB.
+    # Individual tests that need custom query results override this with their own patch.
+    _mock_session = AsyncMock()
+    _mock_session_cls = MagicMock()
+    _mock_session_cls.return_value.__aenter__ = AsyncMock(return_value=_mock_session)
+    _mock_session_cls.return_value.__aexit__ = AsyncMock(return_value=None)
+
     with (
         patch("database.check_db_connection", new_callable=AsyncMock, return_value=True),
+        patch("database.AsyncSessionLocal", _mock_session_cls),
         patch("core.storage.create_bucket_if_missing"),
         patch("core.storage.get_storage_client", return_value=MagicMock()),
     ):

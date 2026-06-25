@@ -48,3 +48,91 @@ Stories:
 ---
 
 ---
+
+---
+
+## SESSION_START — 2026-06-25 (Sprint 2)
+
+**Project**: TanqitFlow — Sprint 2 resume
+**Phase**: EXECUTE → VERIFY → SHIP
+**Status**: Resumed from SESSION_END (Sprint 1 complete)
+
+---
+
+## SESSION_END — 2026-06-25 (Sprint 2)
+
+**Phases completed this session**: EXECUTE (Sprint 2) → VERIFY → SHIP
+
+**What was done**:
+- EXECUTE: All 7 stories (2.1–2.7) implemented across 6 batches
+  - 2.1: JWT login/refresh/logout + brute-force (Redis, 5 attempts/15min)
+  - 2.2: RBAC require_role(UserRole.utility_admin | analyst | field_viewer)
+  - 2.3: TenantContextMiddleware — full JWT decode → schema ContextVar
+  - 2.4: Tenant provisioning API (CREATE SCHEMA + audit_log DDL + MinIO prefix)
+  - 2.5: User CRUD (list/create/get/patch/delete) within tenant
+  - 2.6: AuditLogMiddleware — DB persist to tenant.audit_log (append-only rules)
+  - 2.7: LoginPage + ForgotPasswordPage (FR/AR, RTL support, ProtectedRoute)
+- VERIFY: 24/24 unit tests passing (security + storage)
+- Bug fixed: replaced passlib with direct bcrypt (bcrypt 5.0.0 compat)
+- SHIP: commit ae30201 pushed → github.com/rhorba/tanqitflow (main)
+
+**New files created**:
+  api/models/user.py, api/core/security.py, api/schemas/{auth,tenant,user}.py
+  api/routers/{auth,tenants,users}.py, api/services/tenant.py
+  api/alembic/versions/0002_users.py
+  api/tests/unit/test_security.py, api/tests/integration/test_auth.py
+  frontend/src/stores/authStore.ts, frontend/src/lib/api.ts
+  frontend/src/pages/{LoginPage,ForgotPasswordPage}.tsx
+  frontend/src/components/auth/ProtectedRoute.tsx
+
+**Resume from**: Sprint 3 — DMA Data Model + Ingestion Pipeline (7 stories, ~25 SP)
+Stories:
+  3.1 DMA model + migration (tenant schema: dma, geometry, metadata)
+  3.2 DMA CRUD API (list/create/get/patch, analyst+)
+  3.3 CSV ingestion endpoint (upload → MinIO → Celery task)
+  3.4 Celery task: parse + validate DMA inflow CSV
+  3.5 Celery task: parse + validate customer reads CSV
+  3.6 Ingestion status API (task state from Redis/Celery result backend)
+  3.7 Ingestion history UI (upload dropzone FR/AR + status table)
+
+**Key architectural decisions in force**:
+  - Schema-per-tenant (ADR-001)
+  - All new UI strings → both fr/common.json and ar/common.json
+  - All write endpoints covered by AuditLogMiddleware
+  - Tenant data (DMA, readings) goes in tenant schema, public.users stays in public
+  - bcrypt directly (no passlib) — keep this in Sprint 3+
+
+**GitHub**: https://github.com/rhorba/tanqitflow
+**Last commit**: ae30201
+
+---
+
+---
+
+## SESSION_END — 2026-06-25 (Sprint 2 fix + Sprint 3)
+
+**What was done**:
+- CI FIX (8f74ca9): ruff --fix 51 errors (UP035/007/017, I001, F401) + added typescript-eslint to devDeps
+- SPRINT 3 (28295aa): DMA data model + CSV ingestion pipeline
+  - 3.1: DMA ORM model (TenantBase, no schema prefix — uses search_path)
+  - 3.2: DMA CRUD: GET (paginated, zone filter), POST, PATCH
+  - 3.3: POST /api/v1/ingestion/upload (multipart, 50MB guard, MinIO, Celery enqueue)
+  - 3.4: Celery task process_dma_inflow (validate cols, upsert dma_inflow rows)
+  - 3.5: Celery task process_customer_reads (validate cols, upsert customer_reads rows)
+  - 3.6: GET /api/v1/ingestion/jobs + /jobs/{id} (status polling, pagination)
+  - 3.7: IngestionPage (drag-and-drop dropzone, live 5s poll, status table FR/AR)
+- Tenant provisioning DDL updated with dma, dma_inflow, customer_reads tables
+- Migration 0003: public.ingestion_jobs table
+- 24/24 tests passing, ruff clean, frontend lint + build clean
+
+**Resume from**: Sprint 4 — NRW Balance Calculation (6 stories, ~22 SP)
+Stories:
+  4.1 Water balance model + migration (balance_period table in tenant schema)
+  4.2 Balance calculation service (SIV - SCV = NRW, ILI, leakage index)
+  4.3 Celery task: nightly balance computation
+  4.4 Balance API (GET periods, GET detail with component breakdown)
+  4.5 Dashboard KPI cards (SIV, NRW m³, NRW %, flagged DMAs)
+  4.6 NRW trend chart (Recharts, 12-month sparkline, FR/AR)
+
+**Last commits**: 8f74ca9 (CI fix), 28295aa (Sprint 3)
+**GitHub**: https://github.com/rhorba/tanqitflow

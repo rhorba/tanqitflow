@@ -62,6 +62,23 @@ api.interceptors.response.use(
 
 export default api
 
+// Balance / NRW helpers
+export const balanceApi = {
+  getSummary: () =>
+    api.get<{
+      siv_m3: number
+      scv_m3: number
+      nrw_m3: number
+      nrw_pct: number
+      flagged_dmas: number
+    }>('/balance/summary'),
+
+  getTrend: (months = 12) =>
+    api.get<Array<{ month: string; siv_m3: number; nrw_m3: number; nrw_pct: number }>>(
+      `/balance/trend?months=${months}`
+    ),
+}
+
 // Auth-specific helpers
 export const authApi = {
   login: (email: string, password: string) =>

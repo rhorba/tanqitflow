@@ -80,6 +80,27 @@ CREATE TABLE IF NOT EXISTS {schema}.customer_reads (
 
 CREATE INDEX IF NOT EXISTS ix_{schema}_customer_reads_meter ON {schema}.customer_reads (meter_id);
 CREATE INDEX IF NOT EXISTS ix_{schema}_customer_reads_date ON {schema}.customer_reads (reading_date DESC);
+
+CREATE TABLE IF NOT EXISTS {schema}.balance_period (
+    id              UUID        NOT NULL DEFAULT gen_random_uuid() PRIMARY KEY,
+    dma_id          UUID,
+    dma_code        TEXT        NOT NULL,
+    period_start    TIMESTAMPTZ NOT NULL,
+    period_end      TIMESTAMPTZ NOT NULL,
+    siv_m3          NUMERIC(16,4) NOT NULL,
+    scv_m3          NUMERIC(16,4) NOT NULL,
+    nrw_m3          NUMERIC(16,4) NOT NULL,
+    nrw_pct         NUMERIC(8,4)  NOT NULL,
+    leakage_index   NUMERIC(12,4),
+    flag_level      TEXT        NOT NULL DEFAULT 'normal',
+    computed_at     TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    created_at      TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    UNIQUE (dma_code, period_start)
+);
+
+CREATE INDEX IF NOT EXISTS ix_{schema}_balance_period_dma_code ON {schema}.balance_period (dma_code);
+CREATE INDEX IF NOT EXISTS ix_{schema}_balance_period_start    ON {schema}.balance_period (period_start DESC);
+CREATE INDEX IF NOT EXISTS ix_{schema}_balance_period_flag     ON {schema}.balance_period (flag_level);
 """
 
 

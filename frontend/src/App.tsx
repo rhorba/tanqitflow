@@ -6,6 +6,7 @@ import Header from './components/layout/Header'
 import ProtectedRoute from './components/auth/ProtectedRoute'
 import LoginPage from './pages/LoginPage'
 import ForgotPasswordPage from './pages/ForgotPasswordPage'
+import DashboardPage from './pages/DashboardPage'
 import IngestionPage from './pages/IngestionPage'
 
 const queryClient = new QueryClient({
@@ -42,14 +43,7 @@ function AppShell() {
               <main className="container mx-auto px-4 py-8">
                 <Routes>
                   <Route path="/" element={<Navigate to="/dashboard" replace />} />
-                  <Route
-                    path="/dashboard"
-                    element={
-                      <div className="text-center py-20 text-gray-500">
-                        TanqitFlow — Sprint 3 running ✓
-                      </div>
-                    }
-                  />
+                  <Route path="/dashboard" element={<DashboardPage />} />
                   <Route path="/ingestion" element={<IngestionPage />} />
                   <Route path="*" element={<Navigate to="/dashboard" replace />} />
                 </Routes>

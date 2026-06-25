@@ -176,3 +176,59 @@ class TestIngestionRouter:
 
         resp = client.get(f"/api/v1/ingestion/jobs/{uuid.uuid4()}")
         assert resp.status_code == 404
+
+
+class TestBalanceRouter:
+    def test_summary_returns_200(self, app_client):
+        client, _, mock_db = app_client
+        mock_result = MagicMock()
+        mock_result.first.return_value = MagicMock(
+            total_siv=10000.0,
+            total_scv=7500.0,
+            total_nrw=2500.0,
+            nrw_pct=25.0,
+            flagged_dmas=2,
+        )
+        mock_db.execute = AsyncMock(return_value=mock_result)
+
+        resp = client.get("/api/v1/balance/summary")
+        assert resp.status_code == 200
+        data = resp.json()
+        assert "nrw_pct" in data
+        assert "flagged_dmas" in data
+
+    def test_trend_returns_list(self, app_client):
+        client, _, mock_db = app_client
+        mock_result = MagicMock()
+        mock_result.__iter__ = MagicMock(return_value=iter([
+            MagicMock(month="2026-06", siv_m3=5000.0, nrw_m3=1200.0, nrw_pct=24.0),
+            MagicMock(month="2026-05", siv_m3=4800.0, nrw_m3=1100.0, nrw_pct=22.9),
+        ]))
+        mock_db.execute = AsyncMock(return_value=mock_result)
+
+        resp = client.get("/api/v1/balance/trend?months=2")
+        assert resp.status_code == 200
+        assert isinstance(resp.json(), list)
+
+    def test_periods_returns_paginated(self, app_client):
+        client, _, mock_db = app_client
+
+        count_result = MagicMock()
+        count_result.scalar.return_value = 0
+        rows_result = MagicMock()
+        rows_result.__iter__ = MagicMock(return_value=iter([]))
+        mock_db.execute = AsyncMock(side_effect=[count_result, rows_result])
+
+        resp = client.get("/api/v1/balance/periods")
+        assert resp.status_code == 200
+        data = resp.json()
+        assert "data" in data
+        assert "total" in data
+
+    def test_compute_invalid_month_returns_422(self, app_client):
+        client, _, _ = app_client
+        resp = client.post(
+            "/api/v1/balance/compute",
+            json={"dma_code": "DMA001", "year": 2026, "month": 13},
+        )
+        assert resp.status_code == 422

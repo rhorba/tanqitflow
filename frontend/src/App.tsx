@@ -3,6 +3,9 @@ import { BrowserRouter, Route, Routes, Navigate } from 'react-router-dom'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { useTranslation } from 'react-i18next'
 import Header from './components/layout/Header'
+import ProtectedRoute from './components/auth/ProtectedRoute'
+import LoginPage from './pages/LoginPage'
+import ForgotPasswordPage from './pages/ForgotPasswordPage'
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -16,7 +19,6 @@ const queryClient = new QueryClient({
 function AppShell() {
   const { i18n } = useTranslation()
 
-  // Sync HTML dir attribute with active language
   useEffect(() => {
     const dir = i18n.language === 'ar' ? 'rtl' : 'ltr'
     document.documentElement.setAttribute('dir', dir)
@@ -24,24 +26,37 @@ function AppShell() {
   }, [i18n.language])
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <Header />
-      <main className="container mx-auto px-4 py-8">
-        <Routes>
-          {/* Sprint 6+: real pages wired here */}
-          <Route path="/" element={<Navigate to="/dashboard" replace />} />
-          <Route
-            path="/dashboard"
-            element={
-              <div className="text-center py-20 text-gray-500">
-                TanqitFlow — Sprint 1 scaffold running ✓
-              </div>
-            }
-          />
-          <Route path="*" element={<Navigate to="/" replace />} />
-        </Routes>
-      </main>
-    </div>
+    <Routes>
+      {/* Public routes — no Header */}
+      <Route path="/login" element={<LoginPage />} />
+      <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+
+      {/* Protected routes — with Header */}
+      <Route
+        path="/*"
+        element={
+          <ProtectedRoute>
+            <div className="min-h-screen bg-gray-50">
+              <Header />
+              <main className="container mx-auto px-4 py-8">
+                <Routes>
+                  <Route path="/" element={<Navigate to="/dashboard" replace />} />
+                  <Route
+                    path="/dashboard"
+                    element={
+                      <div className="text-center py-20 text-gray-500">
+                        TanqitFlow — Sprint 2 running ✓
+                      </div>
+                    }
+                  />
+                  <Route path="*" element={<Navigate to="/dashboard" replace />} />
+                </Routes>
+              </main>
+            </div>
+          </ProtectedRoute>
+        }
+      />
+    </Routes>
   )
 }
 

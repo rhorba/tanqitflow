@@ -35,3 +35,25 @@ NEXT: PHASE 4 EXECUTE — Sprint 2 (Auth + Multi-Tenant Core): 7 stories, ~25 SP
   → Ready when user confirms
 
 ---
+
+## 2026-06-26 (Sprint 10)
+
+SPRINT_10_COMPLETE:
+  COMPLETED: Story 10.1 — Prod compose hardened (api healthcheck, driver:local volumes, REDIS_PASSWORD)
+  COMPLETED: Story 10.2 — pr.yml + deploy.yml (Semgrep SAST → GHCR build+push → ZAP DAST → SSH deploy)
+  COMPLETED: Story 10.3 — OpenAPI docs in prod (utility_admin JWT gate, all endpoints documented, TanqitFlow API v1.0)
+  COMPLETED: Story 10.4 — docs/deployment-guide.md (VPS provisioning, TLS, migrations, smoke tests, CI/CD)
+  COMPLETED: Story 10.5 — v1-recording.spec.ts + scripts/record-v1.sh + .recordings/ dir
+  VERIFY: ruff clean, AST valid, frontend lint pass, 81.73% coverage
+  PUSH: git push origin main — commit 6e6d139 — github.com/rhorba/tanqitflow
+  TAG: git tag v1.0 pushed — github.com/rhorba/tanqitflow/releases/tag/v1.0
+  MILESTONE: ALL 10 SPRINTS COMPLETE — TanqitFlow v1.0 shipped
+
+PENDING (manual steps after VPS provisioning):
+  - Add GitHub Secrets: VPS_HOST, VPS_USER, VPS_SSH_KEY, VPS_DEPLOY_PATH
+  - Run certbot for Let's Encrypt TLS cert
+  - Run: docker compose -f docker-compose.prod.yml up -d
+  - Run: alembic upgrade head
+  - Create pilot tenant (ONEE Casablanca) + admin user
+  - Run scripts/record-v1.sh against prod → save to .recordings/v1.0-[date]-full.webm
+  - Create GitHub Release (v1.0 tag, release notes, GHCR image links)

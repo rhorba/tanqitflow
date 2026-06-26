@@ -9,7 +9,7 @@ from core.storage import get_storage_client
 
 settings = get_settings()
 
-_SLUG_RE = re.compile(r"^[a-z0-9_]{2,50}$")
+_SLUG_RE = re.compile(r"^[a-z0-9][a-z0-9_-]{1,49}$")
 
 # DDL to bootstrap a fresh tenant schema with the audit_log table
 _TENANT_SCHEMA_DDL = """
@@ -162,8 +162,8 @@ async def provision_tenant(slug: str, db: AsyncSession) -> None:
     if not _SLUG_RE.match(slug):
         raise ValueError(f"Invalid tenant slug: {slug!r}")
 
-    # 1. Create the PostgreSQL schema
-    await db.execute(text(f"CREATE SCHEMA IF NOT EXISTS {slug}"))
+    # 1. Create the PostgreSQL schema (double-quote to allow hyphens in slugs)
+    await db.execute(text(f'CREATE SCHEMA IF NOT EXISTS "{slug}"'))
 
     # 2. Bootstrap tables inside the schema
     for statement in _TENANT_SCHEMA_DDL.format(schema=slug).split(";"):

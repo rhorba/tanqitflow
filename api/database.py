@@ -39,7 +39,7 @@ async def get_db() -> AsyncGenerator[AsyncSession, None]:
     async with AsyncSessionLocal() as session:
         tenant = current_tenant_slug.get()
         if tenant:
-            await session.execute(text(f"SET search_path TO {tenant}, public"))
+            await session.execute(text(f'SET search_path TO "{tenant}", public'))
         try:
             yield session
             await session.commit()
@@ -47,7 +47,6 @@ async def get_db() -> AsyncGenerator[AsyncSession, None]:
             await session.rollback()
             raise
         finally:
-            # Reset search_path to default (important for connection pool reuse)
             await session.execute(text("SET search_path TO public"))
 
 

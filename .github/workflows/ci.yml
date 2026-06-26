@@ -24,7 +24,7 @@ jobs:
     needs: lint-backend
     services:
       postgres:
-        image: timescale/timescaledb:latest-pg16
+        image: timescale/timescaledb-ha:pg16
         env:
           POSTGRES_USER: tanqit
           POSTGRES_PASSWORD: testpassword

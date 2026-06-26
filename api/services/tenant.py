@@ -163,10 +163,10 @@ async def provision_tenant(slug: str, db: AsyncSession) -> None:
         raise ValueError(f"Invalid tenant slug: {slug!r}")
 
     # 1. Create the PostgreSQL schema (double-quote to allow hyphens in slugs)
-    await db.execute(text(f'CREATE SCHEMA IF NOT EXISTS "{slug}"'))
+    await db.execute(text(f'CREATE SCHEMA IF NOT EXISTS "{slug}"'))  # nosemgrep: python.sqlalchemy.security.sqlalchemy-execute-injection
 
-    # 2. Bootstrap tables inside the schema
-    for statement in _TENANT_SCHEMA_DDL.format(schema=slug).split(";"):
+    # 2. Bootstrap tables inside the schema — slug validated by _SLUG_RE above
+    for statement in _TENANT_SCHEMA_DDL.format(schema=slug).split(";"):  # nosemgrep: python.sqlalchemy.security.sqlalchemy-execute-injection
         stmt = statement.strip()
         if stmt:
             await db.execute(text(stmt))

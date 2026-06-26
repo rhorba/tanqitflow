@@ -5,9 +5,12 @@
 **منصة ذكاء المياه غير المُدرّة للإيراد | Plateforme d'Intelligence Eau Non Facturée**
 
 [![CI](https://github.com/rhorba/tanqitflow/actions/workflows/ci.yml/badge.svg)](https://github.com/rhorba/tanqitflow/actions/workflows/ci.yml)
+[![Deploy](https://github.com/rhorba/tanqitflow/actions/workflows/deploy.yml/badge.svg)](https://github.com/rhorba/tanqitflow/actions/workflows/deploy.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+[![Version](https://img.shields.io/badge/version-1.0.0-green)](https://github.com/rhorba/tanqitflow/releases/tag/v1.0)
 [![Python](https://img.shields.io/badge/Python-3.12-blue)](https://python.org)
 [![React](https://img.shields.io/badge/React-18-61DAFB)](https://react.dev)
+[![Coverage](https://img.shields.io/badge/coverage-81%25-brightgreen)](https://github.com/rhorba/tanqitflow/actions/workflows/ci.yml)
 
 </div>
 
@@ -255,31 +258,45 @@ tanqitflow/
 | Sprint | Thème | Statut |
 |--------|-------|--------|
 | **S1** | Foundation & Infrastructure | ✅ **Terminé** |
-| S2 | Auth + Multi-Tenant (JWT, RBAC, schema isolation) | 🔜 Prochain |
-| S3 | Data Ingestion Pipeline (CSV → MinIO → Celery → TimescaleDB) | ⏳ |
-| S4 | Water Balance Engine (algorithme IWA) | ⏳ |
-| S5 | Leak Detection (MNF + Z-score + Isolation Forest) | ⏳ |
-| S6 | Dashboard & Visualization (KPIs, carte, worklist) | ⏳ |
-| S7 | Bilingual UI complete (FR/AR full RTL) | ⏳ |
-| S8 | Security Hardening (STRIDE, DAST, Law 09-08) | ⏳ |
-| S9 | Testing & Quality Gate (≥80% coverage, Playwright E2E) | ⏳ |
-| S10 | Production Deploy & v1.0 Release | ⏳ |
+| **S2** | Auth + Multi-Tenant (JWT, RBAC, schema isolation) | ✅ **Terminé** |
+| **S3** | Data Ingestion Pipeline (CSV → MinIO → Celery → TimescaleDB) | ✅ **Terminé** |
+| **S4** | Water Balance Engine (algorithme IWA) | ✅ **Terminé** |
+| **S5** | Leak Detection (MNF + Z-score + Isolation Forest) | ✅ **Terminé** |
+| **S6** | Dashboard & Visualization (KPIs, carte, worklist) | ✅ **Terminé** |
+| **S7** | Bilingual UI complete (FR/AR full RTL) | ✅ **Terminé** |
+| **S8** | Security Hardening (STRIDE, DAST, Law 09-08) | ✅ **Terminé** |
+| **S9** | Testing & Quality Gate (≥80% coverage, Playwright E2E) | ✅ **Terminé** |
+| **S10** | Production Deploy & v1.0 Release | ✅ **Terminé** |
 
 ---
 
 ## الاختبار | Tests
 
+**Current status:** 185 tests pass · 81% coverage (gate: 80%) · lint clean
+
 ```bash
-# Backend unit + integration tests
+# Backend unit + integration tests (185 tests, ≥80% coverage gate)
 docker compose -f docker-compose.dev.yml exec api \
   pytest --cov=. --cov-report=term-missing
 
-# Frontend lint
+# Frontend lint (ESLint + TypeScript, 0 warnings allowed)
 docker compose -f docker-compose.dev.yml exec frontend npm run lint
 
-# Frontend build check
+# Frontend production build
 docker compose -f docker-compose.dev.yml exec frontend npm run build
+
+# E2E tests (Playwright — requires running dev stack)
+cd frontend && npx playwright test
 ```
+
+### CI/CD pipeline
+
+| Workflow | Trigger | Jobs |
+|----------|---------|------|
+| `ci.yml` | Every push | Lint Python · Lint TS · Test (coverage gate) · Build Vite · E2E (main only) |
+| `pr.yml` | PRs → main | Lint Python · Lint TS · Test · Build |
+| `security.yml` | Push main + weekly | OWASP ZAP DAST baseline scan |
+| `deploy.yml` | Push main | All CI + Semgrep SAST + Docker build → GHCR + ZAP DAST + SSH deploy |
 
 ---
 

@@ -254,12 +254,13 @@ jobs:
         run: docker compose -f docker-compose.prod.yml down -v
 
   # ─────────────────────────────────────────────────────────────────────────────
-  # 5. Deploy to VPS via SSH
+  # 5. Deploy to VPS via SSH (skipped until VPS_HOST secret is configured)
   # ─────────────────────────────────────────────────────────────────────────────
   deploy:
     name: Deploy to Production VPS
     runs-on: ubuntu-latest
     needs: zap-dast
+    if: ${{ secrets.VPS_HOST != '' }}
     environment: production
     steps:
       - name: Create GitHub Deployment

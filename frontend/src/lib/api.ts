@@ -79,6 +79,31 @@ export const balanceApi = {
     ),
 }
 
+// Map / GeoJSON helpers
+export interface DmaFeatureProperties {
+  id: string
+  code: string
+  name: string
+  zone: string | null
+  pipe_length_km: number | null
+  connection_count: number | null
+  nrw_pct: number | null
+  nrw_m3: number | null
+  siv_m3: number | null
+  scv_m3: number | null
+  flag_level: 'normal' | 'warning' | 'critical'
+}
+
+export interface DmaGeoJSON {
+  type: 'FeatureCollection'
+  features: Array<GeoJSON.Feature<GeoJSON.Geometry | null, DmaFeatureProperties>>
+  heat_points: [number, number, number][]
+}
+
+export const mapApi = {
+  getGeoJSON: () => api.get<DmaGeoJSON>('/dmas/geojson'),
+}
+
 // Auth-specific helpers
 export const authApi = {
   login: (email: string, password: string) =>

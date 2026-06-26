@@ -11,7 +11,8 @@ class DMACreate(BaseModel):
     zone: str | None = None
     pipe_length_km: float | None = None
     connection_count: int | None = None
-    geometry_wkt: str | None = None
+    # Accept GeoJSON geometry object (Polygon or MultiPolygon)
+    geometry_geojson: dict | None = None
 
 
 class DMAUpdate(BaseModel):
@@ -20,7 +21,7 @@ class DMAUpdate(BaseModel):
     zone: str | None = None
     pipe_length_km: float | None = None
     connection_count: int | None = None
-    geometry_wkt: str | None = None
+    geometry_geojson: dict | None = None
     is_active: bool | None = None
 
 

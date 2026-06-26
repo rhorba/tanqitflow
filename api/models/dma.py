@@ -1,7 +1,9 @@
 """DMA (District Metered Area) model — lives in tenant schema."""
 import uuid
 from datetime import datetime
+from typing import Any
 
+from geoalchemy2 import Geometry
 from sqlalchemy import Boolean, DateTime, Numeric, String, Text, func
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
@@ -13,10 +15,7 @@ class TenantBase(DeclarativeBase):
 
 
 class DMA(TenantBase):
-    """
-    One row per District Metered Area within a tenant.
-    Geometry stored as WKT text for portability; PostGIS geometry added later.
-    """
+    """One row per District Metered Area within a tenant."""
     __tablename__ = "dma"
 
     id: Mapped[uuid.UUID] = mapped_column(
@@ -28,7 +27,12 @@ class DMA(TenantBase):
     zone: Mapped[str | None] = mapped_column(String(100), nullable=True, index=True)
     pipe_length_km: Mapped[float | None] = mapped_column(Numeric(10, 3), nullable=True)
     connection_count: Mapped[int | None] = mapped_column(nullable=True)
-    geometry_wkt: Mapped[str | None] = mapped_column(Text, nullable=True)
+    # PostGIS geometry column — SRID 4326 (WGS-84). Accepts Polygon & MultiPolygon.
+    # Read/write is handled via raw SQL (ST_AsGeoJSON / ST_GeomFromGeoJSON) to avoid
+    # asyncpg binary codec quirks with GeoAlchemy2.
+    geometry: Mapped[Any | None] = mapped_column(
+        Geometry(geometry_type="GEOMETRY", srid=4326), nullable=True
+    )
     is_active: Mapped[bool] = mapped_column(Boolean, server_default="true", nullable=False)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now(), nullable=False

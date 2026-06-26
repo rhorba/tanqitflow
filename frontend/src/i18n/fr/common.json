@@ -79,6 +79,17 @@
     "rows": "Lignes",
     "date": "Date"
   },
+  "map": {
+    "title": "Carte des pertes NRW",
+    "legend": "Légende",
+    "normal": "Normal (< 25 %)",
+    "warning": "Attention (25–40 %)",
+    "critical": "Critique (> 40 %)",
+    "no_data": "Aucune zone DMA avec géométrie disponible.",
+    "nrw_pct": "Taux NRW",
+    "nrw_m3": "Volume NRW (m³)",
+    "zone": "Zone"
+  },
   "common": {
     "loading": "Chargement...",
     "error": "Une erreur est survenue",

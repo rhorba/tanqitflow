@@ -44,7 +44,7 @@ CREATE TABLE IF NOT EXISTS {schema}.dma (
     zone                TEXT,
     pipe_length_km      NUMERIC(10,3),
     connection_count    INTEGER,
-    geometry_wkt        TEXT,
+    geometry            geometry(Geometry, 4326),
     is_active           BOOLEAN     NOT NULL DEFAULT true,
     created_at          TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     updated_at          TIMESTAMPTZ NOT NULL DEFAULT NOW()

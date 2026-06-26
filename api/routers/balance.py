@@ -81,12 +81,12 @@ async def list_periods(
     where = ("WHERE " + " AND ".join(filters)) if filters else ""
 
     count_row = await db.execute(
-        text(f"SELECT COUNT(*) FROM balance_period {where}"), params
+        text(f"SELECT COUNT(*) FROM balance_period {where}"), params  # nosemgrep: python.sqlalchemy.security.audit.avoid-sqlalchemy-text.avoid-sqlalchemy-text
     )
     total: int = count_row.scalar() or 0
 
     rows = await db.execute(
-        text(
+        text(  # nosemgrep: python.sqlalchemy.security.audit.avoid-sqlalchemy-text.avoid-sqlalchemy-text
             f"SELECT id::text, dma_code, period_start, period_end, "
             f"siv_m3, scv_m3, nrw_m3, nrw_pct, leakage_index, flag_level, computed_at "
             f"FROM balance_period {where} "

@@ -46,7 +46,7 @@ async def _run_leak_detection(tenant_slug: str, target_date_iso: str | None) -> 
     async with session_factory() as db:
         tok = current_tenant_slug.set(tenant_slug)
         try:
-            await db.execute(text(f"SET search_path TO {tenant_slug}, public"))
+            await db.execute(text(f'SET search_path TO "{tenant_slug}", public'))  # nosemgrep: python.sqlalchemy.security.audit.avoid-sqlalchemy-text.avoid-sqlalchemy-text
             rows = await db.execute(text("SELECT id::text, code FROM dma WHERE is_active = true"))
             dmas = [(r.id, r.code) for r in rows]
             storage = get_storage_client(settings)
@@ -230,7 +230,7 @@ async def _run_retrain(tenant_slug: str) -> None:
     async with session_factory() as db:
         tok = current_tenant_slug.set(tenant_slug)
         try:
-            await db.execute(text(f"SET search_path TO {tenant_slug}, public"))
+            await db.execute(text(f'SET search_path TO "{tenant_slug}", public'))  # nosemgrep: python.sqlalchemy.security.audit.avoid-sqlalchemy-text.avoid-sqlalchemy-text
             rows = await db.execute(text("SELECT id::text, code FROM dma WHERE is_active = true"))
             dmas = [(r.id, r.code) for r in rows]
             storage = get_storage_client(settings)

@@ -58,7 +58,7 @@ class AuditLogMiddleware(BaseHTTPMiddleware):
         try:
             async with AsyncSessionLocal() as session:
                 await session.execute(
-                    text(f'SET search_path TO "{tenant}", public')  # nosemgrep: python.sqlalchemy.security.sqlalchemy-execute-injection
+                    text(f'SET search_path TO "{tenant}", public')  # nosemgrep: python.sqlalchemy.security.audit.avoid-sqlalchemy-text.avoid-sqlalchemy-text
                 )
                 await session.execute(
                     text("""

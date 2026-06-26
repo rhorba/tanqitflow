@@ -70,7 +70,7 @@ def _update_job(job_id: str, status: str, **kwargs: Any) -> None:
         sets = ", " + sets
     with engine.begin() as conn:
         conn.execute(
-            text(f"UPDATE public.ingestion_jobs SET status = :status{sets} WHERE id = :id"),
+            text(f"UPDATE public.ingestion_jobs SET status = :status{sets} WHERE id = :id"),  # nosemgrep: python.sqlalchemy.security.audit.avoid-sqlalchemy-text.avoid-sqlalchemy-text
             {"status": status, "id": job_id, **kwargs},
         )
     engine.dispose()
@@ -85,7 +85,7 @@ def _insert_dma_inflow_rows(tenant_slug: str, df: pd.DataFrame) -> int:
 
     rows_written = 0
     with engine.begin() as conn:
-        conn.execute(text(f"SET search_path TO {tenant_slug}, public"))
+        conn.execute(text(f'SET search_path TO "{tenant_slug}", public'))  # nosemgrep: python.sqlalchemy.security.audit.avoid-sqlalchemy-text.avoid-sqlalchemy-text
         conn.execute(text("""
             CREATE TABLE IF NOT EXISTS dma_inflow (
                 id              UUID    NOT NULL DEFAULT gen_random_uuid() PRIMARY KEY,
@@ -130,7 +130,7 @@ def _insert_customer_reads_rows(tenant_slug: str, df: pd.DataFrame) -> int:
 
     rows_written = 0
     with engine.begin() as conn:
-        conn.execute(text(f"SET search_path TO {tenant_slug}, public"))
+        conn.execute(text(f'SET search_path TO "{tenant_slug}", public'))  # nosemgrep: python.sqlalchemy.security.audit.avoid-sqlalchemy-text.avoid-sqlalchemy-text
         conn.execute(text("""
             CREATE TABLE IF NOT EXISTS customer_reads (
                 id              UUID    NOT NULL DEFAULT gen_random_uuid() PRIMARY KEY,

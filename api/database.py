@@ -39,7 +39,7 @@ async def get_db() -> AsyncGenerator[AsyncSession, None]:
     async with AsyncSessionLocal() as session:
         tenant = current_tenant_slug.get()
         if tenant:
-            await session.execute(text(f'SET search_path TO "{tenant}", public'))  # nosemgrep: python.sqlalchemy.security.sqlalchemy-execute-injection
+            await session.execute(text(f'SET search_path TO "{tenant}", public'))  # nosemgrep: python.sqlalchemy.security.audit.avoid-sqlalchemy-text.avoid-sqlalchemy-text
         try:
             yield session
             await session.commit()

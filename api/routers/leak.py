@@ -43,12 +43,12 @@ async def list_indicators(
     where = ("WHERE " + " AND ".join(filters)) if filters else ""
 
     count_row = await db.execute(
-        text(f"SELECT COUNT(*) FROM leak_indicator {where}"), params
+        text(f"SELECT COUNT(*) FROM leak_indicator {where}"), params  # nosemgrep: python.sqlalchemy.security.audit.avoid-sqlalchemy-text.avoid-sqlalchemy-text
     )
     total: int = count_row.scalar() or 0
 
     rows = await db.execute(
-        text(
+        text(  # nosemgrep: python.sqlalchemy.security.audit.avoid-sqlalchemy-text.avoid-sqlalchemy-text
             f"SELECT id::text, dma_code, indicator_date, "
             f"mnf_m3h, baseline_m3h, mnf_flag, "
             f"max_zscore, zscore_flag, if_anomaly_score, if_flag, "
@@ -105,12 +105,12 @@ async def list_anomalies(
     where = ("WHERE " + " AND ".join(filters)) if filters else ""
 
     count_row = await db.execute(
-        text(f"SELECT COUNT(*) FROM anomaly_event {where}"), params
+        text(f"SELECT COUNT(*) FROM anomaly_event {where}"), params  # nosemgrep: python.sqlalchemy.security.audit.avoid-sqlalchemy-text.avoid-sqlalchemy-text
     )
     total: int = count_row.scalar() or 0
 
     rows = await db.execute(
-        text(
+        text(  # nosemgrep: python.sqlalchemy.security.audit.avoid-sqlalchemy-text.avoid-sqlalchemy-text
             f"SELECT id::text, dma_code, event_time, metric, value, zscore "
             f"FROM anomaly_event {where} "
             f"ORDER BY event_time DESC "

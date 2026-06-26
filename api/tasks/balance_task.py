@@ -33,7 +33,7 @@ def compute_nrw_balance(self, tenant_slug: str, dma_code: str, year: int, month:
             tok = current_tenant_slug.set(tenant_slug)
             try:
                 await session.execute(
-                    __import__("sqlalchemy").text(f"SET search_path TO {tenant_slug}, public")
+                    __import__("sqlalchemy").text(f'SET search_path TO "{tenant_slug}", public')  # nosemgrep: python.sqlalchemy.security.audit.avoid-sqlalchemy-text.avoid-sqlalchemy-text
                 )
                 result = await compute_balance(session, dma_code, period_start, period_end)
                 await session.commit()

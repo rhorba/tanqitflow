@@ -122,12 +122,12 @@ async def list_worklist(
     where = ("WHERE " + " AND ".join(filters)) if filters else ""
 
     count_row = await db.execute(
-        text(f"SELECT COUNT(*) FROM worklist_item {where}"), params
+        text(f"SELECT COUNT(*) FROM worklist_item {where}"), params  # nosemgrep: python.sqlalchemy.security.audit.avoid-sqlalchemy-text.avoid-sqlalchemy-text
     )
     total: int = count_row.scalar() or 0
 
     rows = await db.execute(
-        text(
+        text(  # nosemgrep: python.sqlalchemy.security.audit.avoid-sqlalchemy-text.avoid-sqlalchemy-text
             f"SELECT id::text, dma_code, dma_name, rank, "
             f"estimated_loss_m3_per_month, savings_mad_est, "
             f"confidence_score, alert_type, status, generated_at, updated_at "

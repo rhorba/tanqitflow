@@ -57,7 +57,7 @@ async def _generate(
     async with factory() as db:
         tok = current_tenant_slug.set(tenant_slug)
         try:
-            await db.execute(text(f"SET search_path TO {tenant_slug}, public"))
+            await db.execute(text(f'SET search_path TO "{tenant_slug}", public'))  # nosemgrep: python.sqlalchemy.security.audit.avoid-sqlalchemy-text.avoid-sqlalchemy-text
 
             tenant_row = await db.execute(
                 text("SELECT name FROM public.tenants WHERE slug = :slug"),

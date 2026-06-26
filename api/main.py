@@ -7,7 +7,19 @@ from config import get_settings
 from core.storage import create_bucket_if_missing
 from middleware.audit import AuditLogMiddleware
 from middleware.tenant import TenantContextMiddleware
-from routers import auth, balance, debug, dmas, health, ingestion, leak, reports, tenants, users, worklist
+from routers import (
+    auth,
+    balance,
+    debug,
+    dmas,
+    health,
+    ingestion,
+    leak,
+    reports,
+    tenants,
+    users,
+    worklist,
+)
 
 settings = get_settings()
 

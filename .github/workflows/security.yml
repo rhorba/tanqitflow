@@ -1,0 +1,95 @@
+name: Security (DAST)
+
+on:
+  push:
+    branches: [main]
+  schedule:
+    # Weekly: Monday 03:00 UTC
+    - cron: "0 3 * * 1"
+  workflow_dispatch:
+
+jobs:
+  zap-dast:
+    name: OWASP ZAP Baseline Scan
+    runs-on: ubuntu-latest
+    permissions:
+      issues: write
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Write .env for compose
+        run: |
+          cat <<'EOF' > .env
+          POSTGRES_USER=tanqit
+          POSTGRES_PASSWORD=ci_test_password_zap
+          POSTGRES_DB=tanqitflow
+          REDIS_PASSWORD=ci_redis_password
+          MINIO_ROOT_USER=ciuser
+          MINIO_ROOT_PASSWORD=ci_minio_password
+          MINIO_BUCKET=tanqitflow-uploads
+          JWT_SECRET=ci-zap-jwt-secret-not-for-production
+          PII_ENCRYPTION_KEY=dGVzdGtleXRlc3RrZXl0ZXN0a2V5dGVzdGtleXQ=
+          ENVIRONMENT=production
+          SMTP_HOST=
+          SMTP_PORT=587
+          SMTP_USER=
+          SMTP_PASSWORD=
+          EOF
+
+      - name: Create self-signed SSL cert for DAST
+        run: |
+          mkdir -p nginx/certs
+          openssl req -x509 -newkey rsa:2048 -keyout nginx/certs/privkey.pem \
+            -out nginx/certs/fullchain.pem -days 1 -nodes \
+            -subj "/CN=localhost"
+
+      - name: Build and start services
+        run: |
+          docker compose -f docker-compose.prod.yml build --quiet
+          docker compose -f docker-compose.prod.yml up -d
+          sleep 30
+
+      - name: Wait for API health
+        run: |
+          for i in $(seq 1 20); do
+            status=$(curl -sk -o /dev/null -w "%{http_code}" https://localhost/api/v1/health || true)
+            if [ "$status" = "200" ]; then echo "API healthy"; break; fi
+            echo "Attempt $i: status=$status — waiting..."
+            sleep 10
+          done
+
+      - name: Obtain JWT for authenticated scan
+        id: auth
+        run: |
+          token=$(curl -sk -X POST https://localhost/api/v1/auth/login \
+            -H "Content-Type: application/json" \
+            -d '{"email":"admin@ci.test","password":"cipassword123!"}' \
+            | jq -r '.access_token // empty')
+          echo "token=$token" >> $GITHUB_OUTPUT
+
+      - name: Run OWASP ZAP Baseline Scan
+        uses: zaproxy/action-baseline@v0.14.0
+        with:
+          target: "https://localhost"
+          rules_file_name: ".zap/rules.tsv"
+          cmd_options: >-
+            -z "-config api.disablekey=true"
+            -I
+          allow_issue_writing: false
+          artifact_name: zap-report
+        env:
+          ZAP_AUTH_HEADER: "Authorization"
+          ZAP_AUTH_HEADER_VALUE: "Bearer ${{ steps.auth.outputs.token }}"
+
+      - name: Upload ZAP HTML report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: zap-report-${{ github.run_number }}
+          path: report_html.html
+          retention-days: 30
+
+      - name: Shutdown services
+        if: always()
+        run: docker compose -f docker-compose.prod.yml down -v

@@ -6,6 +6,8 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from config import get_settings
+from core.pii import encrypt_pii
 from core.security import get_current_user, hash_password, require_role
 from database import get_db
 from models.user import User, UserRole
@@ -28,10 +30,30 @@ async def update_me(
     current_user: AnyAuth,
     db: Annotated[AsyncSession, Depends(get_db)],
 ) -> UserResponse:
+    pii_key = get_settings().pii_encryption_key
     if body.language_pref is not None:
         current_user.language_pref = body.language_pref
+    if body.full_name is not None:
+        current_user.full_name_enc = encrypt_pii(body.full_name, pii_key)
     await db.flush()
     return current_user
+
+
+@router.delete("/{user_id}/pii", status_code=status.HTTP_204_NO_CONTENT)
+async def erase_user_pii(
+    user_id: uuid.UUID,
+    admin: AdminOnly,
+    db: Annotated[AsyncSession, Depends(get_db)],
+) -> None:
+    """Law 09-08 erasure: set all PII fields to NULL for the given user."""
+    result = await db.execute(
+        select(User).where(User.id == user_id, User.tenant_id == admin.tenant_id)
+    )
+    user = result.scalar_one_or_none()
+    if user is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
+    user.full_name_enc = None
+    await db.flush()
 
 
 @router.get("", response_model=list[UserResponse])

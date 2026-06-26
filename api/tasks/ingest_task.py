@@ -28,6 +28,14 @@ _CUSTOMER_READS_REQUIRED = {"meter_id", "reading_date", "volume_m3"}
 _CUSTOMER_READS_OPTIONAL = {"dma_code", "customer_type", "notes"}
 
 
+def _sanitize_dataframe(df: pd.DataFrame) -> pd.DataFrame:
+    """Strip CSV formula-injection prefixes from all string columns (OWASP CWE-1236)."""
+    from core.pii import sanitize_csv_cell
+    for col in df.select_dtypes(include="object").columns:
+        df[col] = df[col].apply(sanitize_csv_cell)
+    return df
+
+
 def _validate_columns(df: pd.DataFrame, required: set[str], job_type: str) -> None:
     missing = required - set(df.columns.str.lower().str.strip())
     if missing:
@@ -71,6 +79,7 @@ def _update_job(job_id: str, status: str, **kwargs: Any) -> None:
 def _insert_dma_inflow_rows(tenant_slug: str, df: pd.DataFrame) -> int:
     engine = create_engine(settings.database_sync_url, pool_pre_ping=True)
     df.columns = df.columns.str.lower().str.strip()
+    df = _sanitize_dataframe(df)
     df = _coerce_date(df, "reading_date")
     df["volume_m3"] = pd.to_numeric(df["volume_m3"], errors="coerce")
 
@@ -115,6 +124,7 @@ def _insert_dma_inflow_rows(tenant_slug: str, df: pd.DataFrame) -> int:
 def _insert_customer_reads_rows(tenant_slug: str, df: pd.DataFrame) -> int:
     engine = create_engine(settings.database_sync_url, pool_pre_ping=True)
     df.columns = df.columns.str.lower().str.strip()
+    df = _sanitize_dataframe(df)
     df = _coerce_date(df, "reading_date")
     df["volume_m3"] = pd.to_numeric(df["volume_m3"], errors="coerce")
 

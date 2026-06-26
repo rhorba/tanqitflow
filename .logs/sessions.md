@@ -12,6 +12,54 @@
 
 ---
 
+## SESSION_END — 2026-06-26 (Sprint 5)
+
+**Phases completed this session**: UNDERSTAND → BRAINSTORM (🔴 COMPREHENSIVE) → PLAN → EXECUTE (Sprint 5) → VERIFY → SHIP
+
+**What was done**:
+- BATCH 1 — DB models + migrations:
+  - Alembic 0006: leak_indicator, anomaly_event (TimescaleDB hypertable), worklist_item
+  - ORM models: LeakIndicator, AnomalyEvent, WorklistItem (all tenant-schema)
+  - Pydantic schemas: LeakIndicatorOut, AnomalyEventOut, WorklistItemOut, WorklistStatusPatch
+  - Tenant DDL (provision_tenant): 3 new tables + indexes added
+- BATCH 2 — Pure domain logic:
+  - mnf_calculator.py: MNF per DMA (Africa/Casablanca TZ, rolling 30-night baseline, 1.5× threshold)
+  - zscore_detector.py: rolling 30-day z-score, AnomalyPoint detection
+  - isolation_forest.py: sklearn IsolationForest, per-tenant model pickle, build_feature_vector
+  - confidence_score.py: weighted 3-signal combiner (MNF=0.4, Z=0.3, IF=0.3; redistributed if IF disabled)
+  - worklist_ranker.py: rank_score = loss × cost × (confidence/100), filters < 10%
+- BATCH 3 — Celery tasks:
+  - nightly_leak_detection: runs full pipeline per DMA; 05:00 Casablanca Beat schedule
+  - monthly_if_retrain: retrains IF models for all DMAs with ≥90 days; 1st-of-month schedule
+- BATCH 4 — APIs:
+  - GET /api/v1/leak/indicators (paginated, filter: dma_code, alert_type, flagged_only)
+  - GET /api/v1/leak/anomalies (paginated, filter: dma_code, metric)
+  - POST /api/v1/worklist/generate (ROI ranking + upsert)
+  - GET /api/v1/worklist (paginated, filter: status)
+  - PATCH /api/v1/worklist/{id} (OPEN→IN_PROGRESS→RESOLVED|DEFERRED)
+  - GET /api/v1/worklist/export?format=csv (UTF-8-sig download)
+- VERIFY: 119/119 tests passing, 82.35% coverage
+- SHIP: commit 986fef0 pushed → github.com/rhorba/tanqitflow
+
+**Resume from**: Sprint 6 — Dashboard & Visualization
+Stories:
+  6.1 Dashboard KPI cards + trend chart (date range selector, delta vs prev period)
+  6.2 Sortable DMA table (click → /dma/{id} detail page)
+  6.3 Worklist UI (ranked table, status updates, CSV export button)
+  6.4 DMA detail page (IWA breakdown, 12-month chart, anomaly events list)
+
+**Key architectural decisions in force**:
+  - Schema-per-tenant (ADR-001)
+  - All new UI strings → both fr/common.json and ar/common.json
+  - All write endpoints covered by AuditLogMiddleware
+  - bcrypt directly (no passlib)
+  - Isolation Forest models stored in MinIO at {tenant}/models/if_model_{dma_code}.pkl
+
+**GitHub**: https://github.com/rhorba/tanqitflow
+**Last commit**: 986fef0
+
+---
+
 ## SESSION_START — 2026-06-25
 
 **Project**: TanqitFlow — NRW Intelligence Platform for Moroccan water utilities

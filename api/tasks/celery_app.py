@@ -18,6 +18,8 @@ celery_app = Celery(
         "tasks.ingest_task",
         "tasks.balance_task",
         "tasks.leak_detection_task",
+        "tasks.report_task",
+        "tasks.retention_task",
     ],
 )
 
@@ -43,6 +45,11 @@ celery_app.conf.update(
             "task": "tasks.monthly_if_retrain",
             "schedule": _crontab(hour=3, minute=0, day_of_month=1),
             "args": ("default",),
+        },
+        # Monthly PII retention (Law 09-08): 1st of month at 02:00 Casablanca
+        "monthly-pii-retention": {
+            "task": "tasks.retention_task.monthly_pii_retention",
+            "schedule": _crontab(hour=2, minute=0, day_of_month=1),
         },
     },
 )

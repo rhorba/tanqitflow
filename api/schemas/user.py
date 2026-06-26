@@ -19,6 +19,7 @@ class UserUpdate(BaseModel):
 
 class MeUpdate(BaseModel):
     language_pref: str | None = Field(None, pattern="^(fr|ar)$")
+    full_name: str | None = Field(None, max_length=255)
 
 
 class UserResponse(BaseModel):

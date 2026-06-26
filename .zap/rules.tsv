@@ -1,0 +1,4 @@
+10015	IGNORE	Incomplete or No Cache-control Header Set (API responses — handled by CSP)
+10096	IGNORE	Timestamp Disclosure (false positive on ISO datetime fields)
+10110	IGNORE	Dangerous JS Functions (false positive — no eval() in production bundle)
+90022	IGNORE	Application Error Disclosure (validation errors intentionally descriptive)

@@ -44,3 +44,5 @@ class User(Base):
         DateTime(timezone=True), nullable=True
     )
     language_pref: Mapped[str] = mapped_column(String(2), nullable=False, server_default="fr")
+    # PII field — stored as Fernet ciphertext (Law 09-08); NULL = erased
+    full_name_enc: Mapped[str | None] = mapped_column(String(1024), nullable=True)

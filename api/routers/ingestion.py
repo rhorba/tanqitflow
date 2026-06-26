@@ -7,6 +7,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from config import get_settings
+from core.pii import validate_file_magic
 from core.security import get_current_user
 from core.storage import get_storage_client
 from database import current_tenant_slug, get_db
@@ -19,12 +20,6 @@ router = APIRouter(prefix="/api/v1/ingestion", tags=["ingestion"])
 settings = get_settings()
 
 _MAX_FILE_SIZE = 50 * 1024 * 1024  # 50 MB
-_ALLOWED_CONTENT_TYPES = {
-    "text/csv",
-    "application/csv",
-    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-    "application/octet-stream",
-}
 
 
 @router.post("/upload", response_model=IngestionJobResponse, status_code=status.HTTP_202_ACCEPTED)
@@ -45,6 +40,15 @@ async def upload_file(
             status_code=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE,
             detail="File exceeds 50 MB limit",
         )
+
+    # MIME type validation by file magic bytes (not client-supplied Content-Type)
+    try:
+        validate_file_magic(raw, file.filename or "upload")
+    except ValueError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_415_UNSUPPORTED_MEDIA_TYPE,
+            detail=str(exc),
+        ) from exc
 
     # Store in MinIO under tenant prefix
     job_id = uuid.uuid4()

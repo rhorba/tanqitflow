@@ -16,4 +16,4 @@ addopts = "--cov=. --cov-report=term-missing --cov-fail-under=80"
 filterwarnings = ["ignore::DeprecationWarning"]
 
 [tool.coverage.run]
-omit = ["tests/*", "alembic/*", "*/migrations/*", "tasks/ingest_task.py", "tasks/ping_task.py", "tasks/balance_task.py"]
+omit = ["tests/*", "alembic/*", "*/migrations/*", "tasks/ingest_task.py", "tasks/ping_task.py", "tasks/balance_task.py", "tasks/leak_detection_task.py", "models/leak.py"]

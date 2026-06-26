@@ -7,7 +7,7 @@ from config import get_settings
 from core.storage import create_bucket_if_missing
 from middleware.audit import AuditLogMiddleware
 from middleware.tenant import TenantContextMiddleware
-from routers import auth, balance, debug, dmas, health, ingestion, tenants, users
+from routers import auth, balance, debug, dmas, health, ingestion, leak, tenants, users, worklist
 
 settings = get_settings()
 
@@ -52,3 +52,5 @@ app.include_router(users.router)
 app.include_router(dmas.router)
 app.include_router(ingestion.router)
 app.include_router(balance.router)
+app.include_router(leak.router)
+app.include_router(worklist.router)

@@ -2,6 +2,16 @@
 
 ---
 
+## SESSION_START — 2026-06-26
+
+**Project**: TanqitFlow — NRW Intelligence Platform
+**Resumed from**: Sprint 5 leak detection (after Sprint 5.1 PostGIS map commit ef79dd1)
+**Phase**: EXECUTE → VERIFY → SHIP
+**Last commit**: ef79dd1 (85 tests, 82% coverage)
+**Status**: Sprints 1–4 complete + PostGIS map done. Leak detection engine (5.1–5.5) not yet implemented.
+
+---
+
 ## SESSION_START — 2026-06-25
 
 **Project**: TanqitFlow — NRW Intelligence Platform for Moroccan water utilities

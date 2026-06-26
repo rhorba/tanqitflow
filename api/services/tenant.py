@@ -101,6 +101,59 @@ CREATE TABLE IF NOT EXISTS {schema}.balance_period (
 CREATE INDEX IF NOT EXISTS ix_{schema}_balance_period_dma_code ON {schema}.balance_period (dma_code);
 CREATE INDEX IF NOT EXISTS ix_{schema}_balance_period_start    ON {schema}.balance_period (period_start DESC);
 CREATE INDEX IF NOT EXISTS ix_{schema}_balance_period_flag     ON {schema}.balance_period (flag_level);
+
+CREATE TABLE IF NOT EXISTS {schema}.leak_indicator (
+    id                  UUID        NOT NULL DEFAULT gen_random_uuid() PRIMARY KEY,
+    dma_id              UUID,
+    dma_code            TEXT        NOT NULL,
+    indicator_date      DATE        NOT NULL,
+    mnf_m3h             NUMERIC(10,4),
+    baseline_m3h        NUMERIC(10,4),
+    mnf_flag            BOOLEAN     NOT NULL DEFAULT false,
+    max_zscore          NUMERIC(10,4),
+    zscore_flag         BOOLEAN     NOT NULL DEFAULT false,
+    if_anomaly_score    NUMERIC(6,4),
+    if_flag             BOOLEAN     NOT NULL DEFAULT false,
+    confidence_score    INTEGER     NOT NULL DEFAULT 0,
+    alert_type          TEXT        NOT NULL DEFAULT 'NONE',
+    computed_at         TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    UNIQUE (dma_code, indicator_date)
+);
+
+CREATE INDEX IF NOT EXISTS ix_{schema}_leak_indicator_dma_code ON {schema}.leak_indicator (dma_code);
+CREATE INDEX IF NOT EXISTS ix_{schema}_leak_indicator_date     ON {schema}.leak_indicator (indicator_date DESC);
+CREATE INDEX IF NOT EXISTS ix_{schema}_leak_indicator_alert    ON {schema}.leak_indicator (alert_type);
+
+CREATE TABLE IF NOT EXISTS {schema}.anomaly_event (
+    id          UUID        NOT NULL DEFAULT gen_random_uuid(),
+    dma_code    TEXT        NOT NULL,
+    event_time  TIMESTAMPTZ NOT NULL,
+    metric      TEXT        NOT NULL,
+    value       NUMERIC(14,4) NOT NULL,
+    zscore      NUMERIC(10,4) NOT NULL,
+    PRIMARY KEY (id, event_time)
+);
+
+CREATE INDEX IF NOT EXISTS ix_{schema}_anomaly_event_dma_code  ON {schema}.anomaly_event (dma_code);
+CREATE INDEX IF NOT EXISTS ix_{schema}_anomaly_event_time      ON {schema}.anomaly_event (event_time DESC);
+
+CREATE TABLE IF NOT EXISTS {schema}.worklist_item (
+    id                              UUID        NOT NULL DEFAULT gen_random_uuid() PRIMARY KEY,
+    dma_id                          UUID,
+    dma_code                        TEXT        NOT NULL UNIQUE,
+    dma_name                        TEXT,
+    rank                            INTEGER     NOT NULL,
+    estimated_loss_m3_per_month     NUMERIC(14,4),
+    savings_mad_est                 NUMERIC(14,2),
+    confidence_score                INTEGER     NOT NULL DEFAULT 0,
+    alert_type                      TEXT        NOT NULL DEFAULT 'NONE',
+    status                          TEXT        NOT NULL DEFAULT 'OPEN',
+    generated_at                    TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at                      TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS ix_{schema}_worklist_item_rank   ON {schema}.worklist_item (rank);
+CREATE INDEX IF NOT EXISTS ix_{schema}_worklist_item_status ON {schema}.worklist_item (status);
 """
 
 

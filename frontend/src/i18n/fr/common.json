@@ -45,18 +45,48 @@
     "flagged_dmas": "Zones suspectes",
     "trend": "Tendance (12 mois)"
   },
+  "dmas": {
+    "title": "Zones de mesure (DMA)",
+    "code": "Code DMA",
+    "name": "Nom",
+    "zone": "Zone",
+    "siv": "SIV (m³)",
+    "nrw_m3": "ENF (m³)",
+    "nrw_pct": "Taux ENF (%)",
+    "flag": "Niveau",
+    "confidence": "Confiance",
+    "no_data": "Aucune zone de mesure active.",
+    "page": "Page"
+  },
+  "dma_detail": {
+    "nrw_trend": "Tendance NRW (12 mois)",
+    "iwa_table": "Bilan eau IWA (mensuel)",
+    "period": "Période",
+    "flag": "Niveau",
+    "no_balance": "Aucune donnée de bilan disponible.",
+    "anomalies": "Événements anomalies (Z-score)",
+    "no_anomalies": "Aucune anomalie détectée.",
+    "pipe_km": "{{km}} km de réseau",
+    "connections": "{{n}} abonnés"
+  },
   "worklist": {
     "title": "Plan de réparation prioritaire",
     "rank": "Rang",
     "dma": "Zone DMA",
-    "savings": "Économies estimées (MAD/mois)",
+    "loss_m3": "Perte estimée (m³/mois)",
+    "savings": "Économies (MAD/mois)",
     "confidence": "Confiance (%)",
     "alert_type": "Type d'alerte",
     "status": "Statut",
     "status_open": "Ouvert",
     "status_in_progress": "En cours",
     "status_resolved": "Résolu",
-    "status_deferred": "Reporté"
+    "status_deferred": "Reporté",
+    "generate": "Générer le plan",
+    "generate_success": "{{count}} zones classées",
+    "all_statuses": "Tous les statuts",
+    "all_alerts": "Tous les types",
+    "no_items": "Aucun élément. Cliquez sur « Générer le plan »."
   },
   "ingestion": {
     "title": "Import de données",

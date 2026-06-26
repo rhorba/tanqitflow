@@ -8,7 +8,9 @@ const LANGUAGES = [
 
 const NAV_LINKS = [
   { to: '/dashboard', labelKey: 'nav.dashboard' },
+  { to: '/dmas', labelKey: 'nav.dmas' },
   { to: '/map', labelKey: 'nav.map' },
+  { to: '/worklist', labelKey: 'nav.worklist' },
   { to: '/ingestion', labelKey: 'nav.ingestion' },
 ]
 

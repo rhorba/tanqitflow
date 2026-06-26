@@ -9,6 +9,9 @@ import ForgotPasswordPage from './pages/ForgotPasswordPage'
 import DashboardPage from './pages/DashboardPage'
 import IngestionPage from './pages/IngestionPage'
 import MapPage from './pages/MapPage'
+import DmasPage from './pages/DmasPage'
+import DmaDetailPage from './pages/DmaDetailPage'
+import WorklistPage from './pages/WorklistPage'
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -46,6 +49,9 @@ function AppShell() {
                   <Route path="/" element={<Navigate to="/dashboard" replace />} />
                   <Route path="/dashboard" element={<DashboardPage />} />
                   <Route path="/map" element={<MapPage />} />
+                  <Route path="/dmas" element={<DmasPage />} />
+                  <Route path="/dmas/:id" element={<DmaDetailPage />} />
+                  <Route path="/worklist" element={<WorklistPage />} />
                   <Route path="/ingestion" element={<IngestionPage />} />
                   <Route path="*" element={<Navigate to="/dashboard" replace />} />
                 </Routes>

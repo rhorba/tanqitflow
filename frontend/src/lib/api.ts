@@ -104,6 +104,117 @@ export const mapApi = {
   getGeoJSON: () => api.get<DmaGeoJSON>('/dmas/geojson'),
 }
 
+// DMA table + detail helpers
+export interface DmaTableRow {
+  id: string
+  code: string
+  name: string
+  zone: string | null
+  pipe_length_km: number | null
+  connection_count: number | null
+  siv_m3: number | null
+  scv_m3: number | null
+  nrw_m3: number | null
+  nrw_pct: number | null
+  flag_level: 'normal' | 'warning' | 'critical'
+  confidence_score: number
+  alert_type: string
+  has_leak_flag: boolean
+}
+
+export interface DmaBalancePeriod {
+  id: string
+  dma_code: string
+  period_start: string
+  period_end: string
+  siv_m3: number
+  scv_m3: number
+  nrw_m3: number
+  nrw_pct: number
+  leakage_index: number | null
+  flag_level: 'normal' | 'warning' | 'critical'
+}
+
+export const dmaApi = {
+  getTable: (page = 1, pageSize = 50) =>
+    api.get<{ data: DmaTableRow[]; meta: { page: number; page_size: number; total: number } }>(
+      `/dmas/table?page=${page}&page_size=${pageSize}`
+    ),
+
+  getById: (id: string) =>
+    api.get<{
+      id: string; code: string; name: string; zone: string | null
+      pipe_length_km: number | null; connection_count: number | null
+      is_active: boolean
+    }>(`/dmas/${id}`),
+
+  getBalanceHistory: (id: string, months = 12) =>
+    api.get<{ data: DmaBalancePeriod[]; dma_code: string; dma_name: string }>(
+      `/dmas/${id}/balance?months=${months}`
+    ),
+}
+
+// Worklist helpers
+export interface WorklistItem {
+  id: string
+  dma_code: string
+  dma_name: string | null
+  rank: number
+  estimated_loss_m3_per_month: number | null
+  savings_mad_est: number | null
+  confidence_score: number
+  alert_type: string
+  status: 'OPEN' | 'IN_PROGRESS' | 'RESOLVED' | 'DEFERRED'
+  generated_at: string
+  updated_at: string
+}
+
+export const worklistApi = {
+  list: (page = 1, size = 20, status?: string) =>
+    api.get<{ data: WorklistItem[]; total: number; page: number; size: number }>(
+      `/worklist?page=${page}&size=${size}${status ? `&status=${status}` : ''}`
+    ),
+
+  generate: (waterCost = 16.0) =>
+    api.post<{ generated: number; water_cost_mad_per_m3: number }>('/worklist/generate', {
+      water_cost_mad_per_m3: waterCost,
+    }),
+
+  updateStatus: (id: string, status: WorklistItem['status']) =>
+    api.patch<WorklistItem>(`/worklist/${id}`, { status }),
+
+  exportCsvUrl: () => '/api/v1/worklist/export?format=csv',
+}
+
+// Leak indicator helpers
+export interface LeakIndicator {
+  id: string
+  dma_code: string
+  indicator_date: string
+  mnf_m3h: number | null
+  baseline_m3h: number | null
+  mnf_flag: boolean
+  max_zscore: number | null
+  zscore_flag: boolean
+  if_anomaly_score: number | null
+  if_flag: boolean
+  confidence_score: number
+  alert_type: string
+  computed_at: string
+}
+
+export const leakApi = {
+  getIndicators: (dmaCode: string, page = 1, size = 30) =>
+    api.get<{ data: LeakIndicator[]; total: number; page: number; size: number }>(
+      `/leak/indicators?dma_code=${dmaCode}&page=${page}&size=${size}`
+    ),
+
+  getAnomalies: (dmaCode: string, page = 1, size = 50) =>
+    api.get<{ data: Array<{ id: string; dma_code: string; event_time: string; metric: string; value: number; zscore: number }>; total: number }>(
+      `/leak/anomalies?dma_code=${dmaCode}&page=${page}&size=${size}`
+    ),
+}
+
 // Auth-specific helpers
 export const authApi = {
   login: (email: string, password: string) =>

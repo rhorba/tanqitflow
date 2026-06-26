@@ -116,6 +116,137 @@ async def get_dmas_geojson(
     }
 
 
+@router.get("/table", response_model=dict)
+async def list_dmas_table(
+    _user: AnyAuth,
+    db: Annotated[AsyncSession, Depends(get_db)],
+    page: int = Query(1, ge=1),
+    page_size: int = Query(50, ge=1, le=200),
+) -> dict:
+    """
+    DMA list enriched with latest balance period + latest leak indicator.
+    Used by the DMA table view in the frontend.
+    """
+    count_result = await db.execute(
+        text("SELECT COUNT(*) FROM dma WHERE is_active = true")
+    )
+    total: int = count_result.scalar() or 0
+
+    rows = await db.execute(
+        text("""
+            SELECT
+                d.id::text          AS id,
+                d.code,
+                d.name,
+                d.zone,
+                d.pipe_length_km::float  AS pipe_length_km,
+                d.connection_count,
+                b.siv_m3::float     AS siv_m3,
+                b.scv_m3::float     AS scv_m3,
+                b.nrw_m3::float     AS nrw_m3,
+                b.nrw_pct::float    AS nrw_pct,
+                b.flag_level,
+                li.confidence_score,
+                li.alert_type,
+                (COALESCE(li.mnf_flag, false) OR COALESCE(li.zscore_flag, false)) AS has_leak_flag
+            FROM dma d
+            LEFT JOIN LATERAL (
+                SELECT siv_m3, scv_m3, nrw_m3, nrw_pct, flag_level
+                FROM balance_period
+                WHERE dma_code = d.code
+                ORDER BY period_start DESC
+                LIMIT 1
+            ) b ON true
+            LEFT JOIN LATERAL (
+                SELECT confidence_score, alert_type, mnf_flag, zscore_flag
+                FROM leak_indicator
+                WHERE dma_code = d.code
+                ORDER BY indicator_date DESC
+                LIMIT 1
+            ) li ON true
+            WHERE d.is_active = true
+            ORDER BY d.code
+            LIMIT :limit OFFSET :offset
+        """),
+        {"limit": page_size, "offset": (page - 1) * page_size},
+    )
+
+    data = [
+        {
+            "id": r.id,
+            "code": r.code,
+            "name": r.name,
+            "zone": r.zone,
+            "pipe_length_km": r.pipe_length_km,
+            "connection_count": r.connection_count,
+            "siv_m3": r.siv_m3,
+            "scv_m3": r.scv_m3,
+            "nrw_m3": r.nrw_m3,
+            "nrw_pct": r.nrw_pct,
+            "flag_level": r.flag_level or "normal",
+            "confidence_score": r.confidence_score or 0,
+            "alert_type": r.alert_type or "NONE",
+            "has_leak_flag": bool(r.has_leak_flag),
+        }
+        for r in rows
+    ]
+
+    return {"data": data, "meta": {"page": page, "page_size": page_size, "total": total}}
+
+
+@router.get("/{dma_id}/balance", response_model=dict)
+async def get_dma_balance_history(
+    dma_id: uuid.UUID,
+    _user: AnyAuth,
+    db: Annotated[AsyncSession, Depends(get_db)],
+    months: int = Query(12, ge=1, le=60),
+) -> dict:
+    """Last N months of balance periods for a single DMA (used by detail page)."""
+    result = await db.execute(select(DMA).where(DMA.id == dma_id))
+    dma = result.scalar_one_or_none()
+    if dma is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="DMA not found")
+
+    rows = await db.execute(
+        text("""
+            SELECT
+                id::text    AS id,
+                dma_code,
+                period_start,
+                period_end,
+                siv_m3::float       AS siv_m3,
+                scv_m3::float       AS scv_m3,
+                nrw_m3::float       AS nrw_m3,
+                nrw_pct::float      AS nrw_pct,
+                leakage_index::float AS leakage_index,
+                flag_level
+            FROM balance_period
+            WHERE dma_code = :code
+              AND period_start >= NOW() - (:months || ' months')::interval
+            ORDER BY period_start DESC
+            LIMIT :limit
+        """),
+        {"code": dma.code, "months": months, "limit": months},
+    )
+
+    data = [
+        {
+            "id": r.id,
+            "dma_code": r.dma_code,
+            "period_start": r.period_start.isoformat(),
+            "period_end": r.period_end.isoformat(),
+            "siv_m3": r.siv_m3,
+            "scv_m3": r.scv_m3,
+            "nrw_m3": r.nrw_m3,
+            "nrw_pct": r.nrw_pct,
+            "leakage_index": r.leakage_index,
+            "flag_level": r.flag_level or "normal",
+        }
+        for r in rows
+    ]
+    return {"data": data, "dma_code": dma.code, "dma_name": dma.name}
+
+
 @router.get("", response_model=dict)
 async def list_dmas(
     _user: AnyAuth,

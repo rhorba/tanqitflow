@@ -2,6 +2,38 @@
 
 ---
 
+## SESSION_START — 2026-06-26 (Sprint 10)
+
+**Project**: TanqitFlow — Sprint 10 Production Hardening & Ship
+**Resumed from**: Sprint 9 complete (commit 914cb7c, 81.73% coverage)
+**Phase**: EXECUTE → VERIFY → SHIP (Sprint 10, all 5 stories)
+
+---
+
+## SESSION_END — 2026-06-26 (Sprint 10)
+
+**Phases completed**: UNDERSTAND → BRAINSTORM → PLAN → EXECUTE (Sprint 10) → VERIFY → SHIP
+
+**What was done**:
+- Story 10.1: Prod compose hardened — api healthcheck, `driver: local` on all volumes, REDIS_PASSWORD in .env.example, SMTP defaults
+- Story 10.2: GitHub Actions CI/CD — pr.yml (PR validation) + deploy.yml (full: lint+test → Semgrep SAST → build+push GHCR → ZAP DAST → SSH deploy + GitHub Deployment status); frontend Dockerfile.prod (multi-stage nginx build)
+- Story 10.3: OpenAPI docs enabled in production, gated by DocsAuthMiddleware (utility_admin JWT); all endpoints have summary + description; openapi_tags metadata; nginx passes /docs through to FastAPI; title = "TanqitFlow API v1.0"
+- Story 10.4: docs/deployment-guide.md — full VPS guide (provision, secrets, TLS, migrations, pilot tenant, smoke tests, CI/CD, monitoring, backups, troubleshooting)
+- Story 10.5: v1-recording.spec.ts (9 critical flows), scripts/record-v1.sh, .recordings/ dir; git tag v1.0 pushed
+- VERIFY: ruff clean, AST valid, frontend lint pass, 81.73% coverage (held from Sprint 9)
+- SHIP: commit + push + git tag v1.0
+
+**GitHub Secrets required** (user must add before pipeline can deploy):
+  - VPS_HOST, VPS_USER, VPS_SSH_KEY, VPS_DEPLOY_PATH
+
+**Recording**: Run `scripts/record-v1.sh` once VPS is live to capture .recordings/v1.0-[date]-full.webm
+
+**GitHub**: https://github.com/rhorba/tanqitflow
+**Tag**: v1.0
+**Status**: ALL 10 SPRINTS COMPLETE — TanqitFlow v1.0 shipped 🎉
+
+---
+
 ## SESSION_START — 2026-06-26
 
 **Project**: TanqitFlow — NRW Intelligence Platform

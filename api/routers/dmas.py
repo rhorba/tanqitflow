@@ -27,7 +27,7 @@ async def _set_geometry(db: AsyncSession, dma_id: uuid.UUID, geojson: dict) -> N
     )
 
 
-@router.get("/geojson", response_model=None)
+@router.get("/geojson", response_model=None, summary="DMA GeoJSON + heatmap points", description="GeoJSON FeatureCollection of all active DMAs with their latest NRW balance. Also returns `heat_points` (lat/lng/intensity) for the NRW heatmap layer.")
 async def get_dmas_geojson(
     _user: AnyAuth,
     db: Annotated[AsyncSession, Depends(get_db)],
@@ -116,7 +116,7 @@ async def get_dmas_geojson(
     }
 
 
-@router.get("/table", response_model=dict)
+@router.get("/table", response_model=dict, summary="DMA table view with balance + leak data", description="Paginated DMA list enriched with the latest balance period and leak indicator. Used by the DMA table UI.")
 async def list_dmas_table(
     _user: AnyAuth,
     db: Annotated[AsyncSession, Depends(get_db)],
@@ -194,7 +194,7 @@ async def list_dmas_table(
     return {"data": data, "meta": {"page": page, "page_size": page_size, "total": total}}
 
 
-@router.get("/{dma_id}/balance", response_model=dict)
+@router.get("/{dma_id}/balance", response_model=dict, summary="DMA balance history", description="Last N months of IWA balance periods for a single DMA. Used by the DMA detail page chart.")
 async def get_dma_balance_history(
     dma_id: uuid.UUID,
     _user: AnyAuth,
@@ -247,7 +247,7 @@ async def get_dma_balance_history(
     return {"data": data, "dma_code": dma.code, "dma_name": dma.name}
 
 
-@router.get("", response_model=dict)
+@router.get("", response_model=dict, summary="List DMAs", description="Paginated list of District Metered Areas in the current tenant. Filter by zone or active status.")
 async def list_dmas(
     _user: AnyAuth,
     db: Annotated[AsyncSession, Depends(get_db)],
@@ -276,7 +276,7 @@ async def list_dmas(
     }
 
 
-@router.post("", response_model=DMAResponse, status_code=status.HTTP_201_CREATED)
+@router.post("", response_model=DMAResponse, status_code=status.HTTP_201_CREATED, summary="Create DMA", description="Create a new District Metered Area. Optionally include a GeoJSON geometry for the map. `utility_admin` only.")
 async def create_dma(
     body: DMACreate,
     _admin: AdminOnly,
@@ -300,7 +300,7 @@ async def create_dma(
     return DMAResponse.model_validate(dma)
 
 
-@router.get("/{dma_id}", response_model=DMAResponse)
+@router.get("/{dma_id}", response_model=DMAResponse, summary="Get DMA by ID", description="Retrieve a single DMA's metadata by UUID.")
 async def get_dma(
     dma_id: uuid.UUID,
     _user: AnyAuth,
@@ -313,7 +313,7 @@ async def get_dma(
     return DMAResponse.model_validate(dma)
 
 
-@router.patch("/{dma_id}", response_model=DMAResponse)
+@router.patch("/{dma_id}", response_model=DMAResponse, summary="Update DMA", description="Partial update of DMA metadata or geometry. `utility_admin` only.")
 async def update_dma(
     dma_id: uuid.UUID,
     body: DMAUpdate,

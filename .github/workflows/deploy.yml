@@ -1,0 +1,300 @@
+name: Deploy
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+  packages: write
+  issues: write
+  deployments: write
+
+jobs:
+  # ─────────────────────────────────────────────────────────────────────────────
+  # 1. Lint + Test (coverage gate ≥80%)
+  # ─────────────────────────────────────────────────────────────────────────────
+  lint-and-test:
+    name: Lint & Test
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: timescale/timescaledb:latest-pg16
+        env:
+          POSTGRES_USER: tanqit
+          POSTGRES_PASSWORD: testpassword
+          POSTGRES_DB: tanqitflow_test
+        options: >-
+          --health-cmd "pg_isready -U tanqit -d tanqitflow_test"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+      redis:
+        image: redis:7-alpine
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 6379:6379
+    env:
+      DATABASE_URL: postgresql+asyncpg://tanqit:testpassword@localhost:5432/tanqitflow_test
+      DATABASE_SYNC_URL: postgresql+psycopg2://tanqit:testpassword@localhost:5432/tanqitflow_test
+      REDIS_URL: redis://localhost:6379/0
+      MINIO_ENDPOINT: localhost:9000
+      MINIO_ACCESS_KEY: testkey
+      MINIO_SECRET_KEY: testsecret
+      JWT_SECRET: ci-test-jwt-secret-not-for-production
+      PII_ENCRYPTION_KEY: dGVzdGtleXRlc3RrZXl0ZXN0a2V5dGVzdGtleXQ=
+      ENVIRONMENT: test
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Lint Python (ruff)
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install ruff && cd api && ruff check .
+
+      - name: Install Python deps
+        run: pip install -r api/requirements-dev.txt
+
+      - name: Test Python (coverage gate)
+        run: cd api && pytest
+
+      - name: Lint TypeScript (eslint)
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+          cache-dependency-path: frontend/package-lock.json
+      - run: cd frontend && npm ci && npm run lint
+
+      - name: Build frontend
+        run: cd frontend && npm run build
+
+  # ─────────────────────────────────────────────────────────────────────────────
+  # 2. Semgrep SAST — fails on critical findings
+  # ─────────────────────────────────────────────────────────────────────────────
+  semgrep-sast:
+    name: Semgrep SAST
+    runs-on: ubuntu-latest
+    needs: lint-and-test
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install Semgrep
+        run: pip install semgrep
+      - name: Run Semgrep (Python + JavaScript)
+        run: |
+          semgrep scan \
+            --config "p/python" \
+            --config "p/javascript" \
+            --severity ERROR \
+            --error \
+            --quiet \
+            api/ frontend/src/ || exit 1
+
+  # ─────────────────────────────────────────────────────────────────────────────
+  # 3. Build & Push Docker images to GHCR
+  # ─────────────────────────────────────────────────────────────────────────────
+  build-and-push:
+    name: Build & Push Docker Images
+    runs-on: ubuntu-latest
+    needs: semgrep-sast
+    outputs:
+      image_tag: ${{ steps.meta-api.outputs.tags }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Login to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Extract API image metadata
+        id: meta-api
+        uses: docker/metadata-action@v5
+        with:
+          images: ghcr.io/rhorba/tanqitflow-api
+          tags: |
+            type=sha,prefix=sha-
+            type=raw,value=latest
+
+      - name: Build & Push API image
+        uses: docker/build-push-action@v5
+        with:
+          context: ./api
+          dockerfile: ./api/Dockerfile
+          push: true
+          tags: ${{ steps.meta-api.outputs.tags }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Extract Frontend image metadata
+        id: meta-frontend
+        uses: docker/metadata-action@v5
+        with:
+          images: ghcr.io/rhorba/tanqitflow-frontend
+          tags: |
+            type=sha,prefix=sha-
+            type=raw,value=latest
+
+      - name: Build & Push Frontend image
+        uses: docker/build-push-action@v5
+        with:
+          context: ./frontend
+          dockerfile: ./frontend/Dockerfile.prod
+          push: true
+          tags: ${{ steps.meta-frontend.outputs.tags }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  # ─────────────────────────────────────────────────────────────────────────────
+  # 4. OWASP ZAP DAST — fails on High findings
+  # ─────────────────────────────────────────────────────────────────────────────
+  zap-dast:
+    name: OWASP ZAP DAST
+    runs-on: ubuntu-latest
+    needs: build-and-push
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Login to GHCR (pull built images)
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Write .env for compose
+        run: |
+          cat <<'EOF' > .env
+          POSTGRES_USER=tanqit
+          POSTGRES_PASSWORD=ci_test_password_zap
+          POSTGRES_DB=tanqitflow
+          REDIS_PASSWORD=ci_redis_password
+          MINIO_ROOT_USER=ciuser
+          MINIO_ROOT_PASSWORD=ci_minio_password
+          MINIO_BUCKET=tanqitflow-uploads
+          JWT_SECRET=ci-zap-jwt-secret-not-for-production
+          PII_ENCRYPTION_KEY=dGVzdGtleXRlc3RrZXl0ZXN0a2V5dGVzdGtleXQ=
+          ENVIRONMENT=production
+          SMTP_HOST=
+          SMTP_PORT=587
+          SMTP_USER=
+          SMTP_PASSWORD=
+          EOF
+
+      - name: Create self-signed SSL cert
+        run: |
+          mkdir -p nginx/certs
+          openssl req -x509 -newkey rsa:2048 -keyout nginx/certs/privkey.pem \
+            -out nginx/certs/fullchain.pem -days 1 -nodes \
+            -subj "/CN=localhost"
+
+      - name: Pull and start services
+        run: |
+          docker compose -f docker-compose.prod.yml pull
+          docker compose -f docker-compose.prod.yml up -d
+          sleep 30
+
+      - name: Wait for API health
+        run: |
+          for i in $(seq 1 20); do
+            status=$(curl -sk -o /dev/null -w "%{http_code}" https://localhost/api/v1/health || true)
+            if [ "$status" = "200" ]; then echo "API healthy"; break; fi
+            echo "Attempt $i: status=$status — waiting..."
+            sleep 10
+          done
+
+      - name: Obtain JWT for authenticated scan
+        id: auth
+        run: |
+          token=$(curl -sk -X POST https://localhost/api/v1/auth/login \
+            -H "Content-Type: application/json" \
+            -d '{"email":"admin@ci.test","password":"cipassword123!"}' \
+            | jq -r '.access_token // empty')
+          echo "token=$token" >> $GITHUB_OUTPUT
+
+      - name: Run OWASP ZAP Baseline Scan
+        uses: zaproxy/action-baseline@v0.14.0
+        with:
+          target: "https://localhost"
+          rules_file_name: ".zap/rules.tsv"
+          cmd_options: >-
+            -z "-config api.disablekey=true"
+            -I
+          allow_issue_writing: false
+          artifact_name: zap-report-deploy
+        env:
+          ZAP_AUTH_HEADER: "Authorization"
+          ZAP_AUTH_HEADER_VALUE: "Bearer ${{ steps.auth.outputs.token }}"
+
+      - name: Upload ZAP report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: zap-report-deploy-${{ github.run_number }}
+          path: report_html.html
+          retention-days: 30
+
+      - name: Shutdown services
+        if: always()
+        run: docker compose -f docker-compose.prod.yml down -v
+
+  # ─────────────────────────────────────────────────────────────────────────────
+  # 5. Deploy to VPS via SSH
+  # ─────────────────────────────────────────────────────────────────────────────
+  deploy:
+    name: Deploy to Production VPS
+    runs-on: ubuntu-latest
+    needs: zap-dast
+    environment: production
+    steps:
+      - name: Create GitHub Deployment
+        id: deployment
+        uses: chrnorm/deployment-action@v2
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          environment: production
+
+      - name: SSH Deploy
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          key: ${{ secrets.VPS_SSH_KEY }}
+          script: |
+            cd ${{ secrets.VPS_DEPLOY_PATH }}
+            echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+            docker compose -f docker-compose.prod.yml pull
+            docker compose -f docker-compose.prod.yml up -d --remove-orphans
+            docker system prune -f
+
+      - name: Mark deployment successful
+        if: success()
+        uses: chrnorm/deployment-status@v2
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          deployment-id: ${{ steps.deployment.outputs.deployment_id }}
+          state: success
+          environment-url: https://${{ secrets.VPS_HOST }}
+
+      - name: Mark deployment failed
+        if: failure()
+        uses: chrnorm/deployment-status@v2
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          deployment-id: ${{ steps.deployment.outputs.deployment_id }}
+          state: failure

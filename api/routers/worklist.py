@@ -23,7 +23,7 @@ _AnalystPlus = Depends(require_role(UserRole.analyst, UserRole.utility_admin))
 _AdminOnly = Depends(require_role(UserRole.utility_admin))
 
 
-@router.post("/generate", response_model=dict, status_code=status.HTTP_200_OK)
+@router.post("/generate", response_model=dict, status_code=status.HTTP_200_OK, summary="Generate ROI-ranked repair worklist", description="Ranks all DMAs by NRW repair ROI score (loss_m3 × water_cost × confidence/100) and upserts results into the worklist. Existing entries are updated in place.")
 async def generate_worklist(
     body: WorklistGenerateRequest,
     db: _DB,
@@ -103,7 +103,7 @@ async def generate_worklist(
     return {"generated": len(ranked), "water_cost_mad_per_m3": body.water_cost_mad_per_m3}
 
 
-@router.get("", response_model=dict)
+@router.get("", response_model=dict, summary="List worklist items", description="Paginated repair worklist sorted by rank (ascending). Filter by status: OPEN | IN_PROGRESS | RESOLVED | DEFERRED.")
 async def list_worklist(
     _user: _Auth,
     db: _DB,
@@ -158,7 +158,7 @@ async def list_worklist(
     return {"data": items, "total": total, "page": page, "size": size}
 
 
-@router.patch("/{item_id}", response_model=WorklistItemOut)
+@router.patch("/{item_id}", response_model=WorklistItemOut, summary="Update worklist item status", description="Transition a worklist item through its lifecycle: OPEN → IN_PROGRESS → RESOLVED | DEFERRED.")
 async def update_worklist_status(
     item_id: uuid.UUID,
     body: WorklistStatusPatch,
@@ -197,7 +197,7 @@ async def update_worklist_status(
     )
 
 
-@router.get("/export")
+@router.get("/export", summary="Export worklist as CSV", description="Download the full worklist as a UTF-8-sig CSV file, ordered by rank. Compatible with Excel and French locale decimal separators.")
 async def export_worklist(
     _user: _Auth,
     db: _DB,

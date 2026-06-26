@@ -104,10 +104,10 @@ services:
       JWT_REFRESH_TOKEN_EXPIRE_DAYS: 7
       PII_ENCRYPTION_KEY: ${PII_ENCRYPTION_KEY}
       ENVIRONMENT: production
-      SMTP_HOST: ${SMTP_HOST}
-      SMTP_PORT: ${SMTP_PORT}
-      SMTP_USER: ${SMTP_USER}
-      SMTP_PASSWORD: ${SMTP_PASSWORD}
+      SMTP_HOST: ${SMTP_HOST:-}
+      SMTP_PORT: ${SMTP_PORT:-587}
+      SMTP_USER: ${SMTP_USER:-}
+      SMTP_PASSWORD: ${SMTP_PASSWORD:-}
     depends_on:
       db:
         condition: service_healthy
@@ -116,6 +116,12 @@ services:
       minio:
         condition: service_healthy
     restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/api/v1/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
     command: gunicorn main:app -w 4 -k uvicorn.workers.UvicornWorker --bind 0.0.0.0:8000
     deploy:
       resources:
@@ -176,7 +182,7 @@ services:
     image: ghcr.io/rhorba/tanqitflow-frontend:latest
     build:
       context: ./frontend
-      dockerfile: Dockerfile
+      dockerfile: Dockerfile.prod
     restart: unless-stopped
     deploy:
       resources:
@@ -186,6 +192,10 @@ services:
 
 volumes:
   db_data:
+    driver: local
   redis_data:
+    driver: local
   minio_data:
+    driver: local
   certbot_webroot:
+    driver: local

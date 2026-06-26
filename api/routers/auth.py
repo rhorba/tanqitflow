@@ -49,7 +49,17 @@ def _set_refresh_cookie(response: Response, token: str) -> None:
 # POST /login
 # ---------------------------------------------------------------------------
 
-@router.post("/login", response_model=TokenResponse, status_code=status.HTTP_200_OK)
+@router.post(
+    "/login",
+    response_model=TokenResponse,
+    status_code=status.HTTP_200_OK,
+    summary="Obtain access token",
+    description=(
+        "Authenticate with email and password. Returns a short-lived `access_token` (15 min) "
+        "and sets an httpOnly `refresh_token` cookie (7 days). "
+        "Brute-force protection locks the account for 15 min after 5 failed attempts."
+    ),
+)
 async def login(
     body: LoginRequest,
     response: Response,
@@ -94,7 +104,12 @@ async def login(
 # POST /refresh
 # ---------------------------------------------------------------------------
 
-@router.post("/refresh", response_model=TokenResponse)
+@router.post(
+    "/refresh",
+    response_model=TokenResponse,
+    summary="Refresh access token",
+    description="Exchange the httpOnly refresh_token cookie (or body field) for a new access token and rotated refresh token.",
+)
 async def refresh(
     response: Response,
     db: Annotated[AsyncSession, Depends(get_db)],
@@ -128,7 +143,7 @@ async def refresh(
 # POST /logout
 # ---------------------------------------------------------------------------
 
-@router.post("/logout", status_code=status.HTTP_204_NO_CONTENT)
+@router.post("/logout", status_code=status.HTTP_204_NO_CONTENT, summary="Invalidate session", description="Clears the httpOnly refresh_token cookie.")
 async def logout(response: Response) -> None:
     response.delete_cookie(key=_REFRESH_COOKIE_NAME, path="/api/v1/auth")
 
@@ -137,7 +152,7 @@ async def logout(response: Response) -> None:
 # POST /password-reset/request
 # ---------------------------------------------------------------------------
 
-@router.post("/password-reset/request", status_code=status.HTTP_202_ACCEPTED)
+@router.post("/password-reset/request", status_code=status.HTTP_202_ACCEPTED, summary="Request password reset", description="Sends a reset link to the email if it exists. Always returns 202 to prevent email enumeration.")
 async def request_password_reset(
     body: PasswordResetRequest,
     db: Annotated[AsyncSession, Depends(get_db)],
@@ -161,7 +176,7 @@ async def request_password_reset(
 # POST /password-reset/confirm
 # ---------------------------------------------------------------------------
 
-@router.post("/password-reset/confirm", status_code=status.HTTP_200_OK)
+@router.post("/password-reset/confirm", status_code=status.HTTP_200_OK, summary="Confirm password reset", description="Set a new password using the token from the reset email. Token is valid for 2 hours.")
 async def confirm_password_reset(
     body: PasswordResetConfirm,
     db: Annotated[AsyncSession, Depends(get_db)],

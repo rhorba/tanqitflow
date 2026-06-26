@@ -29,7 +29,7 @@ _AnalystPlus = Depends(require_role(UserRole.analyst, UserRole.utility_admin))
 # GET /summary  — dashboard KPI cards
 # ---------------------------------------------------------------------------
 
-@router.get("/summary", response_model=BalanceSummaryOut)
+@router.get("/summary", response_model=BalanceSummaryOut, summary="Dashboard KPI cards", description="Latest aggregate NRW stats: total SIV, NRW volume, NRW %, and count of flagged DMAs across the tenant.")
 async def balance_summary(
     _user: _Auth,
     db: _DB,
@@ -43,7 +43,7 @@ async def balance_summary(
 # GET /trend  — 12-month sparkline
 # ---------------------------------------------------------------------------
 
-@router.get("/trend", response_model=list[BalanceTrendPoint])
+@router.get("/trend", response_model=list[BalanceTrendPoint], summary="NRW trend (12-month sparkline)", description="Monthly NRW % values for the last N months, aggregated across all DMAs. Used by the dashboard chart.")
 async def balance_trend(
     _user: _Auth,
     db: _DB,
@@ -58,7 +58,7 @@ async def balance_trend(
 # GET /periods  — paginated list
 # ---------------------------------------------------------------------------
 
-@router.get("/periods", response_model=dict)
+@router.get("/periods", response_model=dict, summary="List balance periods", description="Paginated list of computed IWA water balance periods. Filter by DMA code or flag level (normal / warning / critical).")
 async def list_periods(
     _user: _Auth,
     db: _DB,
@@ -120,7 +120,7 @@ async def list_periods(
 # POST /compute  — on-demand trigger (utility_admin only)
 # ---------------------------------------------------------------------------
 
-@router.post("/compute", response_model=BalancePeriodOut, status_code=status.HTTP_200_OK)
+@router.post("/compute", response_model=BalancePeriodOut, status_code=status.HTTP_200_OK, summary="Trigger on-demand balance computation", description="Compute the IWA water balance for a specific DMA and month. `utility_admin` only. Nightly Celery task also runs this automatically.")
 async def trigger_compute(
     body: ComputeRequest,
     db: _DB,

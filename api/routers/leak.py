@@ -17,7 +17,7 @@ _DB = Annotated[AsyncSession, Depends(get_db)]
 _AnalystPlus = Depends(require_role(UserRole.analyst, UserRole.utility_admin))
 
 
-@router.get("/indicators", response_model=dict)
+@router.get("/indicators", response_model=dict, summary="List leak indicators", description="Paginated MNF leak indicators per DMA. Each row combines MNF flag, Z-score flag, Isolation Forest flag, and a weighted confidence score (0–100).")
 async def list_indicators(
     _user: _Auth,
     db: _DB,
@@ -82,7 +82,7 @@ async def list_indicators(
     return {"data": items, "total": total, "page": page, "size": size}
 
 
-@router.get("/anomalies", response_model=dict)
+@router.get("/anomalies", response_model=dict, summary="List anomaly events", description="Paginated Z-score anomaly events from the rolling 30-day detection window. Filter by DMA code or metric name.")
 async def list_anomalies(
     _user: _Auth,
     db: _DB,

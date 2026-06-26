@@ -2,6 +2,7 @@ import { useState, useRef, DragEvent, ChangeEvent } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import api from '../lib/api'
+import { fmtDateTime } from '../lib/format'
 
 type JobType = 'dma_inflow' | 'customer_reads' | 'pressure_flow'
 type JobStatus = 'queued' | 'processing' | 'done' | 'error'
@@ -25,7 +26,7 @@ const STATUS_COLORS: Record<JobStatus, string> = {
 }
 
 export default function IngestionPage() {
-  const { t } = useTranslation()
+  const { t, i18n } = useTranslation()
   const qc = useQueryClient()
   const fileInputRef = useRef<HTMLInputElement>(null)
 
@@ -176,7 +177,7 @@ export default function IngestionPage() {
                     {job.row_count != null ? job.row_count.toLocaleString() : '—'}
                   </td>
                   <td className="px-4 py-3 text-gray-500">
-                    {new Date(job.created_at).toLocaleString()}
+                    {fmtDateTime(job.created_at, i18n.language)}
                   </td>
                 </tr>
               ))}

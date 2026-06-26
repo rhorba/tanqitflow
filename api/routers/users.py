@@ -9,11 +9,29 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from core.security import get_current_user, hash_password, require_role
 from database import get_db
 from models.user import User, UserRole
-from schemas.user import UserCreate, UserResponse, UserUpdate
+from schemas.user import MeUpdate, UserCreate, UserResponse, UserUpdate
 
 router = APIRouter(prefix="/api/v1/users", tags=["users"])
 
 AdminOnly = Annotated[User, Depends(require_role(UserRole.utility_admin))]
+AnyAuth = Annotated[User, Depends(get_current_user)]
+
+
+@router.get("/me", response_model=UserResponse)
+async def get_me(current_user: AnyAuth) -> UserResponse:
+    return current_user
+
+
+@router.patch("/me", response_model=UserResponse)
+async def update_me(
+    body: MeUpdate,
+    current_user: AnyAuth,
+    db: Annotated[AsyncSession, Depends(get_db)],
+) -> UserResponse:
+    if body.language_pref is not None:
+        current_user.language_pref = body.language_pref
+    await db.flush()
+    return current_user
 
 
 @router.get("", response_model=list[UserResponse])

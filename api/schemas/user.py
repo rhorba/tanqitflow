@@ -17,11 +17,16 @@ class UserUpdate(BaseModel):
     is_active: bool | None = None
 
 
+class MeUpdate(BaseModel):
+    language_pref: str | None = Field(None, pattern="^(fr|ar)$")
+
+
 class UserResponse(BaseModel):
     id: uuid.UUID
     email: str
     role: UserRole
     is_active: bool
+    language_pref: str
     created_at: datetime
     last_login_at: datetime | None
 

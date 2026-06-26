@@ -12,6 +12,9 @@ import MapPage from './pages/MapPage'
 import DmasPage from './pages/DmasPage'
 import DmaDetailPage from './pages/DmaDetailPage'
 import WorklistPage from './pages/WorklistPage'
+import ReportsPage from './pages/ReportsPage'
+import { useAuthStore } from './stores/authStore'
+import { userApi } from './lib/api'
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -23,13 +26,31 @@ const queryClient = new QueryClient({
 })
 
 function AppShell() {
-  const { i18n } = useTranslation()
+  const { i18n, t } = useTranslation()
+  const token = useAuthStore((s) => s.accessToken)
+  const setLanguagePref = useAuthStore((s) => s.setLanguagePref)
 
+  // Sync RTL/LTR and page <title>
   useEffect(() => {
     const dir = i18n.language === 'ar' ? 'rtl' : 'ltr'
     document.documentElement.setAttribute('dir', dir)
     document.documentElement.setAttribute('lang', i18n.language)
-  }, [i18n.language])
+    document.title = t('app.name')
+  }, [i18n.language, t])
+
+  // On login, load language_pref from API and apply it
+  useEffect(() => {
+    if (!token) return
+    userApi.getMe()
+      .then(({ data }) => {
+        const pref = data.language_pref as 'fr' | 'ar'
+        if (pref && pref !== i18n.language) {
+          i18n.changeLanguage(pref)
+        }
+        setLanguagePref(pref ?? 'fr')
+      })
+      .catch(() => {})
+  }, [token]) // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
     <Routes>
@@ -52,6 +73,7 @@ function AppShell() {
                   <Route path="/dmas" element={<DmasPage />} />
                   <Route path="/dmas/:id" element={<DmaDetailPage />} />
                   <Route path="/worklist" element={<WorklistPage />} />
+                  <Route path="/reports" element={<ReportsPage />} />
                   <Route path="/ingestion" element={<IngestionPage />} />
                   <Route path="*" element={<Navigate to="/dashboard" replace />} />
                 </Routes>

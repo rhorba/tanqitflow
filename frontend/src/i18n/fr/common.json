@@ -120,6 +120,16 @@
     "nrw_m3": "Volume NRW (m³)",
     "zone": "Zone"
   },
+  "reports": {
+    "title": "Rapports PDF",
+    "language": "Langue du rapport",
+    "generate": "Générer le rapport",
+    "generating": "Génération en cours…",
+    "ready": "Rapport prêt",
+    "download": "Télécharger le PDF",
+    "generation_failed": "La génération du rapport a échoué.",
+    "note": "Le rapport inclut les 10 zones les plus impactées et le plan de réparation."
+  },
   "common": {
     "loading": "Chargement...",
     "error": "Une erreur est survenue",

@@ -234,7 +234,7 @@ export default function DmaDetailPage() {
       <div className="flex items-start gap-4">
         <button
           onClick={() => navigate('/dmas')}
-          className="mt-1 text-gray-400 hover:text-gray-700 text-lg leading-none"
+          className="mt-1 text-gray-400 hover:text-gray-700 text-lg leading-none rtl:rotate-180 inline-block"
           aria-label="back"
         >
           ←

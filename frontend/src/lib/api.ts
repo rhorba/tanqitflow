@@ -215,6 +215,37 @@ export const leakApi = {
     ),
 }
 
+// User "me" helpers
+export interface UserMe {
+  id: string
+  email: string
+  role: string
+  is_active: boolean
+  language_pref: 'fr' | 'ar'
+  created_at: string
+  last_login_at: string | null
+}
+
+export const userApi = {
+  getMe: () => api.get<UserMe>('/users/me'),
+  updateMe: (body: { language_pref?: 'fr' | 'ar' }) =>
+    api.patch<UserMe>('/users/me', body),
+}
+
+// Report helpers
+export const reportApi = {
+  request: (fromDate: string, toDate: string, lang: 'fr' | 'ar') =>
+    api.post<{ task_id: string; report_id: string }>('/reports/water-balance', {
+      from_date: fromDate,
+      to_date: toDate,
+      lang,
+    }),
+  pollDownload: (taskId: string) =>
+    api.get<{ status: string; url?: string; size_bytes?: number }>(
+      `/reports/download/${taskId}`
+    ),
+}
+
 // Auth-specific helpers
 export const authApi = {
   login: (email: string, password: string) =>

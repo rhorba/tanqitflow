@@ -1,7 +1,9 @@
 import { NavLink } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
+import { userApi } from '../../lib/api'
+import { useAuthStore } from '../../stores/authStore'
 
-const LANGUAGES = [
+const LANGUAGES: { code: 'fr' | 'ar'; label: string }[] = [
   { code: 'fr', label: 'FR' },
   { code: 'ar', label: 'ع' },
 ]
@@ -11,22 +13,29 @@ const NAV_LINKS = [
   { to: '/dmas', labelKey: 'nav.dmas' },
   { to: '/map', labelKey: 'nav.map' },
   { to: '/worklist', labelKey: 'nav.worklist' },
+  { to: '/reports', labelKey: 'nav.reports' },
   { to: '/ingestion', labelKey: 'nav.ingestion' },
 ]
 
 export default function Header() {
   const { t, i18n } = useTranslation()
+  const setLanguagePref = useAuthStore((s) => s.setLanguagePref)
+  const token = useAuthStore((s) => s.accessToken)
 
-  const switchLanguage = (code: string) => {
+  const switchLanguage = (code: 'fr' | 'ar') => {
     i18n.changeLanguage(code)
+    setLanguagePref(code)
+    if (token) {
+      userApi.updateMe({ language_pref: code }).catch(() => {})
+    }
   }
 
   return (
     <header className="bg-white border-b border-gray-200 shadow-sm">
       <div className="container mx-auto px-4 h-16 flex items-center justify-between">
         {/* Logo + name */}
-        <div className="flex items-center gap-6">
-          <div className="flex items-center gap-3">
+        <div className="flex items-center gap-6 rtl:flex-row-reverse">
+          <div className="flex items-center gap-3 rtl:flex-row-reverse">
             <div className="w-8 h-8 bg-brand-600 rounded-lg flex items-center justify-center">
               <span className="text-white font-bold text-sm">T</span>
             </div>
@@ -34,7 +43,7 @@ export default function Header() {
           </div>
 
           {/* Nav links */}
-          <nav className="flex items-center gap-1">
+          <nav className="flex items-center gap-1 rtl:flex-row-reverse">
             {NAV_LINKS.map(({ to, labelKey }) => (
               <NavLink
                 key={to}

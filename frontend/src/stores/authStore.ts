@@ -6,7 +6,9 @@ interface AuthState {
   userId: string | null
   role: string | null
   tenantSlug: string | null
+  languagePref: 'fr' | 'ar'
   setAuth: (token: string) => void
+  setLanguagePref: (lang: 'fr' | 'ar') => void
   clearAuth: () => void
 }
 
@@ -25,6 +27,7 @@ export const useAuthStore = create<AuthState>()(
       userId: null,
       role: null,
       tenantSlug: null,
+      languagePref: 'fr',
 
       setAuth(token) {
         const payload = parseJwt(token)
@@ -34,6 +37,10 @@ export const useAuthStore = create<AuthState>()(
           role: payload.role as string,
           tenantSlug: payload.tenant_slug as string,
         })
+      },
+
+      setLanguagePref(lang) {
+        set({ languagePref: lang })
       },
 
       clearAuth() {

@@ -135,7 +135,7 @@ jobs:
       - name: Start frontend dev server
         run: cd frontend && npm run dev &
       - name: Wait for dev server
-        run: npx wait-on http://localhost:5173 --timeout 30000
+        run: cd frontend && npx wait-on http://localhost:5173 --timeout 60000
       - name: Run Playwright E2E tests
         run: cd frontend && npx playwright test --reporter=list
         continue-on-error: true
